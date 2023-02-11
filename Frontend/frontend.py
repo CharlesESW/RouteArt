@@ -117,3 +117,17 @@ def getFile() -> str:
     file_path = filedialog.askopenfilename(filetypes=(("JPEGs", "*.jpg .jpeg"), ))
 
     return file_path
+
+
+# TODO Image bool, for origin at centre of image
+# TODO Resize image
+# TODO Add in initial size to images
+# TODO Add optional path
+
+# TODO Button flag too
+# TODO Round button corners
+# TODO Button auto size
+
+# TODO Text Box
+
+# TODO Docstring

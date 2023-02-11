@@ -3,6 +3,7 @@ import shutil
 from os import getenv
 from dotenv import load_dotenv
 import requests
+import pygame
 from json import loads as convert_string_json_to_dict
 from pathlib import Path
 
@@ -50,6 +51,9 @@ elif LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[3]:
 elif LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[4]:
     logger.setLevel(logging.CRITICAL)
 
+
+pygame.init()
+
 def extract_current_location(raw_gps_string: str) -> dict[str, float]:
     raw_gps_data: dict = convert_string_json_to_dict(raw_gps_string.replace("'", "\""))
 
@@ -95,8 +99,26 @@ def get_OSM_image_path_location(width: int | float, height: int | float, zoom: i
 
     return file_path
 
+def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, centre: tuple[int | float, int | float]):
+    with open("lat_long.json", 'r') as f:
+        info = convert_string_json_to_dict(f.read())
+
+    points = [((centre[0]-x['longitude'])*(4**zoom)+width/2, height/2-((centre[1]-x['latitude']))*(4**zoom)) for x in info["drawing_points"]]
+
+    surf = pygame.Surface((width, height))
+
+    surf.fill((255, 255, 255))
+
+    for (p1, p2) in zip(points, points[1:]):
+        pygame.draw.line(surf, (0, 0, 0), p1, p2)
+
+    pygame.image.save(surf, "temp.jpg")
+
+
 def main():
-    print(get_OSM_image_path_location(600, 600, 17))
+    # print(get_OSM_image_path_location(600, 600, 17))
+
+    GPS_to_Image(360, 180, 11, (-1.1873156, 52.9532518))
 
 
 if __name__ == "__main__":
