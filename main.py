@@ -9,7 +9,6 @@ import pygame
 import requests
 from dotenv import load_dotenv
 
-from Frontend.frontend import Image
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
 
@@ -56,7 +55,7 @@ elif LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[4]:
 
 pygame.init()
 pygame.display.set_caption("RouteArt")
-# pygame.display.set_icon(Image(Path("")).img)
+pygame.display.set_icon(pygame.image.load("Frontend\\Window_Icon.png"))
 
 def extract_current_location(raw_gps_string: str) -> dict[str, float]:
     raw_gps_data: dict = convert_json_string_to_dict(raw_gps_string.replace("'", "\""))
