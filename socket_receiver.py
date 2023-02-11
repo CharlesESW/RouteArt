@@ -9,5 +9,5 @@ socket.bind((HOST_IP,HOST_PORT))
 socket.listen(1)
 connection, client_address = socket.accept()
 
-def get_location() -> str:
+def get_location():
     return connection.recv(2048).decode("ascii")
