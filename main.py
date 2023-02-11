@@ -80,7 +80,7 @@ def get_OSM_image_path_location(width: int | float, height: int | float, zoom: i
         raise TypeError("Parameter zoom must be an integer or a float.")
 
     map_center = extract_current_location(raw_gps_string=get_raw_location_data())
-    file_path = Path("Background_Map_Images/") / (str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)
+    file_path = Path(f"""Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     map_image_response = requests.get(
         f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_center["longitude"]},{map_center["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
         stream=True
