@@ -1,4 +1,5 @@
 import logging
+import os.path
 import shutil
 import sys
 from json import load as load_json_file, loads as convert_json_string_to_dict
@@ -9,6 +10,7 @@ import pygame
 import requests
 from dotenv import load_dotenv
 
+from Frontend.frontend import Button, Image
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
 
@@ -41,6 +43,7 @@ if RECEIVER_FUNC == _ALLOWED_RECEIVER_FUNCS[0]:
 elif RECEIVER_FUNC == _ALLOWED_RECEIVER_FUNCS[1]:
     from GPS_Data_Receivers.socket_receiver import get_raw_location_data
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 if LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[0]:
     logger.setLevel(logging.DEBUG)
@@ -67,7 +70,7 @@ def extract_current_location(raw_gps_string: str) -> dict[str, float]:
         "longitude": raw_gps_data["network"]["longitude"]
     }
 
-def get_desired_background_map_image(width: int | float, height: int | float, zoom: int | float) -> Path:
+def get_desired_background_map_image(width: int | float, height: int | float, zoom: int | float, latlon: dict[str, float] = None) -> Path:
     if isinstance(width, (int, float)):
         if not 50 < width <= 10000:
             raise ValueError("Parameter width must be between 50 & 10000.")
@@ -85,20 +88,25 @@ def get_desired_background_map_image(width: int | float, height: int | float, zo
             raise ValueError("Parameter zoom must be between 1 & 20.")
     else:
         raise TypeError("Parameter zoom must be an integer or a float.")
-
-    map_center = extract_current_location(raw_gps_string=get_raw_location_data())
-    file_path = Path(f"""Desired_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
-    map_image_response = requests.get(
-        f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_center["longitude"]},{map_center["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
-        stream=True
-    )
-
-    if map_image_response.status_code == 200:
-        with open(file_path, "wb") as file:
-            shutil.copyfileobj(map_image_response.raw, file)
-        logger.info("Desired map image background successfully downloaded.")
+    if not latlon:
+        map_center = extract_current_location(raw_gps_string=get_raw_location_data())
     else:
-        raise FailedRequestError(response=map_image_response)
+        map_center = latlon
+
+    file_path = Path(f"""Desired_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+
+    if not os.path.isfile(file_path):
+        map_image_response = requests.get(
+            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_center["longitude"]},{map_center["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
+            stream=True
+        )
+
+        if map_image_response.status_code == 200:
+            with open(file_path, "wb") as file:
+                shutil.copyfileobj(map_image_response.raw, file)
+            logger.info("Desired map image background successfully downloaded.")
+        else:
+            raise FailedRequestError(response=map_image_response)
 
     return file_path
 
@@ -125,24 +133,39 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
         original_center: dict[str, float] = load_json_file(file)["original_center"]
 
     current_location = extract_current_location(raw_gps_string=get_raw_location_data())
-    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{original_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
-    map_image_response = requests.get(
-        f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{original_center["longitude"]},{original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
-        stream=True
-    )
+    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{original_center},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    if not os.path.isfile(file_path):
+        map_image_response = requests.get(
+            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{original_center["longitude"]},{original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
+            stream=True
+        )
 
-    if map_image_response.status_code == 200:
-        with open(file_path, "wb") as file:
-            shutil.copyfileobj(map_image_response.raw, file)
-        logger.info("Walking map image background successfully downloaded.")
-    else:
-        raise FailedRequestError(response=map_image_response)
+        if map_image_response.status_code == 200:
+            with open(file_path, "wb") as file:
+                shutil.copyfileobj(map_image_response.raw, file)
+            logger.info("Walking map image background successfully downloaded.")
+        else:
+            raise FailedRequestError(response=map_image_response)
 
     return file_path
 
 
 def main():
-    screen = pygame.display.set_mode((400, 400))
+    screen = pygame.display.set_mode((1200, 825))
+
+    get_desired_map_button = Button("Get map of current location", (500, 500), (50, 50))  # TODO: change position, width & height relative to screen size
+    big_logo = Image("Frontend\\Logo.png", pos=(100, 100))  # TODO: change position, width & height relative to screen size
+    mini_logo = Image("Frontend\\Logo.png", pos=(50, 50))  # TODO: change position, width & height relative to screen size
+    desired_map_image = Image(get_desired_background_map_image(60, 60, 4), pos=(150, 150))  # TODO: change position relative to screen size
+    course_zoom_in_button = Button("+", (700, 500), (50, 50))
+    course_zoom_out_button = Button("-", (700, 560), (50, 50))
+    fine_zoom_in_button = Button("+", (770, 500), (50, 50))
+    fine_zoom_out_button = Button("-", (770, 560), (50, 50))
+    get_new_desired_map_center_button = Button("Center map to current location", (600, 700), (50, 50))  # TODO: change position, width & height relative to screen size
+
+    state = "pre_map"
+    desired_map_zoom = 4
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -151,7 +174,60 @@ def main():
 
         screen.fill((255, 255, 255))
 
+        if state == "pre_map":
+            big_logo.draw(screen)
+            get_desired_map_button.draw(screen)
+
+            if get_desired_map_button.click():
+                state = "get_desired_map"
+                desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom))  # TODO: change width & height relative to screen size
+
+        if state == "get_desired_map":
+            mini_logo.draw(screen)
+            course_zoom_in_button.draw(screen)
+            course_zoom_out_button.draw(screen)
+            fine_zoom_out_button.draw(screen)
+            fine_zoom_in_button.draw(screen)
+            desired_map_image.draw(screen)
+            get_new_desired_map_center_button.draw(screen)
+
+            if course_zoom_in_button.click():
+                if desired_map_zoom + 1 <= 20:
+                    desired_map_zoom += 1
+
+                    with open(Path("lat_long.json"), "r") as file:
+                        desired_map_cache_still_deciding_center: dict[str, float] = load_json_file(file)["desired_map_cache_still_deciding_center"]
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+            elif course_zoom_out_button.click():
+                if desired_map_zoom - 1 >= 1:
+                    desired_map_zoom -= 1
+
+                    with open(Path("lat_long.json"), "r") as file:
+                        desired_map_cache_still_deciding_center: dict[str, float] = load_json_file(file)["desired_map_cache_still_deciding_center"]
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+            elif fine_zoom_in_button.click():
+                if desired_map_zoom + 0.1 <= 20:
+                    desired_map_zoom += 0.1
+
+                    with open(Path("lat_long.json"), "r") as file:
+                        desired_map_cache_still_deciding_center: dict[str, float] = load_json_file(file)["desired_map_cache_still_deciding_center"]
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+            elif fine_zoom_out_button.click():
+                if desired_map_zoom - 0.1 >= 1:
+                    desired_map_zoom -= 0.1
+
+                    with open(Path("lat_long.json"), "r") as file:
+                        desired_map_cache_still_deciding_center: dict[str, float] = load_json_file(file)["desired_map_cache_still_deciding_center"]
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+            elif get_new_desired_map_center_button.click():
+                desired_map_image.reloadImage(get_desired_background_map_image(60, 60, desired_map_zoom))  # TODO: change width & height relative to screen size
+
         pygame.display.flip()
+
 
 if __name__ == "__main__":
     main()

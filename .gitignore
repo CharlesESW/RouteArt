@@ -271,7 +271,7 @@ $RECYCLE.BIN/
 *.lnk
 
 #Custom Ignores
-Background_Map_Images/*
+Desired_Background_Map_Images/*
 Walking_Background_Map_Images/*
 User_Drawings/*
 Route_GPS_Drawings/*

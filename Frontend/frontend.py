@@ -1,9 +1,10 @@
 # Code to start program
+from pathlib import Path
+
 import pygame
 import tkinter as tk
 from tkinter import filedialog
 
-pygame.init()
 pygame.font.init()
 
 FONT = pygame.font.SysFont("Helvetica", 20)
@@ -14,7 +15,7 @@ root.withdraw()
 # Image class
 class Image:
     # Load image
-    def __init__(self, path: str, alpha: float = 1, pos: tuple[int, int] = (0, 0)) -> None:
+    def __init__(self, path: str | Path, alpha: float = 1, pos: tuple[int, int] = (0, 0)) -> None:
         self.img = pygame.image.load(path)
         self.img.set_alpha(int(alpha * 255))
 
@@ -22,11 +23,11 @@ class Image:
         self._pos = pos
 
     # Display image to screen
-    def blitImage(self, display: pygame.surface.Surface) -> None:
+    def draw(self, display: pygame.surface.Surface) -> None:
         display.blit(self.img, self.pos)
 
     # Reload image
-    def reloadImage(self, path: str):
+    def reloadImage(self, path: str | Path):
         self.img = pygame.image.load(path)
         self.img.set_alpha(int(self._alpha * 255))
 
@@ -41,7 +42,7 @@ class Image:
 
     @property
     def pos(self) -> tuple[int, int]:
-        return self.pos
+        return self._pos
 
     @pos.setter
     def pos(self, val: tuple[int, int]) -> None:
@@ -49,10 +50,10 @@ class Image:
 
 # Button Class
 class Button:
-    def __init__(self, text: str, pos: tuple[int, int], dims: tuple[int, int]) -> None:
+    def __init__(self, text: str, pos: tuple[int, int], size: tuple[int, int]) -> None:
         self._text = text
         self._pos = pos
-        self.dims = dims
+        self.dims = size
 
         # Render text
         self.rendText = FONT.render(self._text, True, (0, 0, 0))
@@ -73,9 +74,9 @@ class Button:
             (self.pos[1] <= mouse_pos[1] <= self.pos[1] + self.dims[1])
         )
 
-    def click(self, mouse_pos: tuple[int, int], mouse_state: bool) -> bool:
+    def click(self) -> bool:
         # TODO Rate limit click button
-        return self.hover(mouse_pos) and mouse_state
+        return self.hover(pygame.mouse.get_pos()) and pygame.mouse.get_pressed(3)[0]
 
     @property
     def text(self) -> str:
