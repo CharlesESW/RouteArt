@@ -1,13 +1,17 @@
 import logging
 import shutil
+import sys
+from json import load as load_json_file, loads as convert_json_string_to_dict
 from os import getenv
-from dotenv import load_dotenv
-import requests
-from json import loads as convert_string_json_to_dict
 from pathlib import Path
 
+import pygame
+import requests
+from dotenv import load_dotenv
+
+from Frontend.frontend import Image
 from exceptions import FailedRequestError
-from settings import LOG_LEVEL, ACCEPTABLE_LOG_LEVELS
+from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
 
 load_dotenv()
 
@@ -50,8 +54,12 @@ elif LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[3]:
 elif LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[4]:
     logger.setLevel(logging.CRITICAL)
 
+pygame.init()
+pygame.display.set_caption("RouteArt")
+# pygame.display.set_icon(Image(Path("")).img)
+
 def extract_current_location(raw_gps_string: str) -> dict[str, float]:
-    raw_gps_data: dict = convert_string_json_to_dict(raw_gps_string.replace("'", "\""))
+    raw_gps_data: dict = convert_json_string_to_dict(raw_gps_string.replace("'", "\""))
 
     logger.info("Raw GPS data successfully extracted from JSON.")
 
@@ -60,7 +68,7 @@ def extract_current_location(raw_gps_string: str) -> dict[str, float]:
         "longitude": raw_gps_data["network"]["longitude"]
     }
 
-def get_OSM_image_path_location(width: int | float, height: int | float, zoom: int | float) -> Path:
+def get_desired_background_map_image(width: int | float, height: int | float, zoom: int | float) -> Path:
     if isinstance(width, (int, float)):
         if not 50 < width <= 10000:
             raise ValueError("Parameter width must be between 50 & 10000.")
@@ -80,7 +88,7 @@ def get_OSM_image_path_location(width: int | float, height: int | float, zoom: i
         raise TypeError("Parameter zoom must be an integer or a float.")
 
     map_center = extract_current_location(raw_gps_string=get_raw_location_data())
-    file_path = Path(f"""Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    file_path = Path(f"""Desired_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     map_image_response = requests.get(
         f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_center["longitude"]},{map_center["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
         stream=True
@@ -89,15 +97,62 @@ def get_OSM_image_path_location(width: int | float, height: int | float, zoom: i
     if map_image_response.status_code == 200:
         with open(file_path, "wb") as file:
             shutil.copyfileobj(map_image_response.raw, file)
-        logger.info("Map image background successfully downloaded.")
+        logger.info("Desired map image background successfully downloaded.")
     else:
         raise FailedRequestError(response=map_image_response)
 
     return file_path
 
-def main():
-    print(get_OSM_image_path_location(600, 600, 17))
+def get_walking_background_map_image(width: int | float, height: int | float, zoom: int | float) -> Path:
+    if isinstance(width, (int, float)):
+        if not 50 < width <= 10000:
+            raise ValueError("Parameter width must be between 50 & 10000.")
+    else:
+        raise TypeError("Parameter width must be an integer or a float.")
 
+    if isinstance(height, (int, float)):
+        if not 50 < height <= 10000:
+            raise ValueError("Parameter height must be between 50 & 10000.")
+    else:
+        raise TypeError("Parameter height must be an integer or a float.")
+
+    if isinstance(zoom, (int, float)):
+        if not 1 <= zoom <= 20:
+            raise ValueError("Parameter zoom must be between 1 & 20.")
+    else:
+        raise TypeError("Parameter zoom must be an integer or a float.")
+
+    with open(Path("lat_long.json"), "r") as file:
+        original_center: dict[str, float] = load_json_file(file)["original_center"]
+
+    current_location = extract_current_location(raw_gps_string=get_raw_location_data())
+    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{original_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    map_image_response = requests.get(
+        f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{original_center["longitude"]},{original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
+        stream=True
+    )
+
+    if map_image_response.status_code == 200:
+        with open(file_path, "wb") as file:
+            shutil.copyfileobj(map_image_response.raw, file)
+        logger.info("Walking map image background successfully downloaded.")
+    else:
+        raise FailedRequestError(response=map_image_response)
+
+    return file_path
+
+
+def main():
+    screen = pygame.display.set_mode((400, 400))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        screen.fill((255, 255, 255))
+
+        pygame.display.flip()
 
 if __name__ == "__main__":
     main()
