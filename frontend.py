@@ -1,11 +1,15 @@
 # Code to start program
 import pygame
-import sys
+import tkinter as tk
+from tkinter import filedialog
 
 pygame.init()
 pygame.font.init()
 
 FONT = pygame.font.SysFont("Helvetica", 20)
+
+root = tk.Tk()
+root.withdraw()
 
 # Image class
 class Image:
@@ -108,33 +112,8 @@ class Button:
     def height(self, val: int) -> None:
         self.dims = (self.dims[0], val)
 
-# TODO Image input box
+# Function to get image file
+def getFile() -> str:
+    file_path = filedialog.askopenfilename(filetypes=(("JPEGs", "*.jpg .jpeg"), ))
 
-class ImageInput:
-    def __init__(self) -> None:
-        pass
-
-# TODO Entry box?
-
-## Test Area
-screen = pygame.display.set_mode((400, 400))
-
-buttons = [
-    Button("hi", (10, 20), (30, 30)),
-    Button("this button", (40, 100), (90, 20)),
-]
-
-while 1:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-    screen.fill((255, 255, 255))
-
-    for button in buttons:
-        button.draw(screen)
-        if button.click(pygame.mouse.get_pos(), pygame.mouse.get_pressed(3)[0]):
-            print(button.text)
-
-    pygame.display.flip()
+    return file_path
