@@ -271,3 +271,5 @@ $RECYCLE.BIN/
 *.lnk
 
 #Custom Ignores
+Background_Map_Images/*
+User_Drawings/*
