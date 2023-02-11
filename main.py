@@ -1,17 +1,20 @@
-import socket as socket_lib
+from os import getenv
+from dotenv import load_dotenv
 
-HOST_IP = "192.168.43.70"
-HOST_PORT = 12345
-socket = socket_lib.socket()
+load_dotenv()
 
-socket.setsockopt(socket_lib.SOL_SOCKET, socket_lib.SO_REUSEADDR, 1)
-socket.bind((HOST_IP,HOST_PORT))
-socket.listen(1)
-connection, client_address = socket.accept()
+_ALLOWED_RECEIVER_FUNCS = ("file", "socket")
+RECEIVER_FUNC = getenv("RECEIVER_FUNC", "file")
+if RECEIVER_FUNC not in _ALLOWED_RECEIVER_FUNCS:
+    raise ValueError(f"Environment variable RECEIVER_FUNC must be one of {_ALLOWED_RECEIVER_FUNCS}")
 
+if RECEIVER_FUNC == _ALLOWED_RECEIVER_FUNCS[0]:
+    from file_receiver import get_location
+elif RECEIVER_FUNC == _ALLOWED_RECEIVER_FUNCS[1]:
+    from socket_receiver import get_location
 
 def main():
-    print(connection.recv(2048).decode("ascii"))
+    print(get_location())
 
 
 if __name__ == "__main__":
