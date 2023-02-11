@@ -1,11 +1,10 @@
-import os
-from typing import Callable
+from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv()
 
 _ALLOWED_RECEIVER_FUNCS = ("file", "socket")
-RECEIVER_FUNC = os.getenv("RECEIVER_FUNC", "file")
+RECEIVER_FUNC = getenv("RECEIVER_FUNC", "file")
 if RECEIVER_FUNC not in _ALLOWED_RECEIVER_FUNCS:
     raise ValueError(f"Environment variable RECEIVER_FUNC must be one of {_ALLOWED_RECEIVER_FUNCS}")
 
