@@ -97,7 +97,8 @@ class Button:
             raise BaseException("Fuck you Matt you caused this stupid fucking error to occur this would not have to exist if you didn't want to do the silly billy math just put in some fucking dimensions it's just trial and error you fuck")
 
         if self.auto_size:
-            self.dims = [*map(lambda x: x+2, self.rendText.get_rect().size)]
+            pos_dims = [*map(lambda x: x+2, self.rendText.get_rect().size)]
+            self.dims = [*map(max, zip(self.dims, pos_dims))]
 
     def draw(self, display: pygame.surface.Surface):
         if self.c_flag:
@@ -152,7 +153,8 @@ class Button:
         self.rendText = FONT.render(self._text, True, (0, 0, 0))
 
         if self.auto_size:
-            self.dims = self.rendText.get_rect().size
+            pos_dims = [*map(lambda x: x+2, self.rendText.get_rect().size)]
+            self.dims = [*map(max, zip(self.dims, pos_dims))]
 
     @property
     def pos(self) -> tuple[int, int]:
