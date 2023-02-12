@@ -35,6 +35,7 @@ class Image:
                 self.img = pygame.transform.scale(self.img, size)
             else:
                 self.img = pygame.transform.scale(self.img, [*map(lambda x: int(x * size), self.img.get_rect().size)])
+                self.img = pygame.transform.scale(self.img, [*map(lambda x: int(x * size), self.img.get_rect().size)])
 
     # Display image to screen
     def draw(self, display: pygame.surface.Surface) -> None:
@@ -42,6 +43,7 @@ class Image:
             if self.c_flag:
                 x, y = self.pos
                 wid, height = self.img.get_rect().size
+                display.blit(self.img, (x - wid / 2, y - height / 2))
                 display.blit(self.img, (x - wid / 2, y - height / 2))
             else:
                 display.blit(self.img, self.pos)
@@ -109,9 +111,13 @@ class Image:
         self._pos = val
 
 
+
 # Button Class
 class Button:
     def __init__(
+            self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
+            border: int = 2, border_curve: bool = True, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20
+    ) -> None:
             self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
             border: int = 2, border_curve: bool = True, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20
     ) -> None:
@@ -135,11 +141,14 @@ class Button:
 
         if self.auto_size:
             self.dims = [*map(lambda x: x + 8, self.rendText.get_rect().size)]
+            self.dims = [*map(lambda x: x + 8, self.rendText.get_rect().size)]
 
     def draw(self, display: pygame.surface.Surface):
         if self.c_flag:
             x, y = self._pos
             width, height = self.dims
+            x -= width / 2
+            y -= height / 2
             x -= width / 2
             y -= height / 2
 
