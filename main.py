@@ -161,7 +161,7 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
 
 
 def main():
-    screen = pygame.display.set_mode((1200, 825))
+    screen = pygame.display.set_mode((1200, 825))  # TODO: make screen size variable
 
     big_logo = Image("Frontend\\Logo.png", pos=(600, 320), size=0.6)  # TODO: change position, width & height relative to screen size
     title = TextBox("RouteArt", pos=(600, 665), font_size=80)
@@ -208,7 +208,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mousedown = True
 
-        screen.fill((255, 0, 255))
+        screen.fill((255, 255, 255))
 
         if state == "import_drawing":
             big_logo.draw(screen)
@@ -357,9 +357,9 @@ def main():
                 walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
 
             elif finish_walking_button.click(mousedown):
-                drawing.pos = (600, 330)
+                drawing.pos = (600, 330)  # TODO: change position relative to screen size
                 drawing.alpha = 1
-                walking_drawing_image.pos = (600, 330)
+                walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
                 comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
 
                 logger.debug("changing state to image_comparison")
