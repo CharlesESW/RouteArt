@@ -10,7 +10,7 @@ import pygame
 import requests
 from dotenv import load_dotenv
 
-from Frontend.frontend import Button, Image, getFile
+from Frontend.frontend import Button, Image, TextBox, getFile
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
 
@@ -155,16 +155,19 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
 def main():
     screen = pygame.display.set_mode((1200, 825))
 
-    big_logo = Image("Frontend\\Logo.png", pos=(100, 100))  # TODO: change position, width & height relative to screen size
-    mini_logo = Image("Frontend\\Logo.png", pos=(50, 50))  # TODO: change position, width & height relative to screen size
+    big_logo = Image("Frontend\\Logo.png", pos=(600, 320), size=0.6)  # TODO: change position, width & height relative to screen size
+    title = TextBox("RouteArt", pos=(600, 665), font_size=80)
+    import_drawing_button = Button("Import drawing", pos=(600, 730))  # TODO: change position, width & height relative to screen size
+    mini_logo = Image("Frontend\\Logo.png", pos=(130, 130), size=0.18)  # TODO: change position, width & height relative to screen size
     desired_map_image = Image(pos=(150, 150))  # TODO: change position relative to screen size
-    course_zoom_in_button = Button("+", (700, 500), (50, 50))
-    course_zoom_out_button = Button("-", (700, 560), (50, 50))
-    fine_zoom_in_button = Button("+", (770, 500), (50, 50))
-    fine_zoom_out_button = Button("-", (770, 560), (50, 50))
-    get_new_desired_map_center_button = Button("Center map to current location", (600, 700), (50, 50))  # TODO: change position, width & height relative to screen size
-    confirm_desired_map_center_button = Button("Confirm map center", (600, 760), (50, 50))  # TODO: change position, width & height relative to screen size
-    import_drawing_button = Button("Import drawing", (600, 412), (50, 50))  # TODO: change position, width & height relative to screen size
+    course_zoom_in_button = Button("+", (700, 500))
+    course_zoom_out_button = Button("-", (700, 560))
+    course_zoom_label = TextBox("Course zoom", (700, 440))
+    fine_zoom_in_button = Button("+", (770, 500))
+    fine_zoom_out_button = Button("-", (770, 560))
+    fine_zoom_label = TextBox("Fine zoom", (770, 440))
+    get_new_desired_map_center_button = Button("Center map to current location", (600, 700))  # TODO: change position, width & height relative to screen size
+    confirm_desired_map_center_button = Button("Confirm map center", (600, 760))  # TODO: change position, width & height relative to screen size
     drawing = Image()
     location_marker_map_image = Image(pos=(600, 412))
 
@@ -186,6 +189,7 @@ def main():
 
         if state == "import_drawing":
             big_logo.draw(screen)
+            title.draw(screen)
             import_drawing_button.draw(screen)
 
             if import_drawing_button.click(mousedown):
@@ -204,12 +208,14 @@ def main():
                     state = "get_desired_map"
 
         elif state == "get_desired_map":
-            mini_logo.draw(screen)
             desired_map_image.draw(screen)
+            mini_logo.draw(screen)
             course_zoom_in_button.draw(screen)
             course_zoom_out_button.draw(screen)
+            course_zoom_label.draw(screen)
             fine_zoom_out_button.draw(screen)
             fine_zoom_in_button.draw(screen)
+            fine_zoom_label.draw(screen)
             get_new_desired_map_center_button.draw(screen)
             confirm_desired_map_center_button.draw(screen)
 
