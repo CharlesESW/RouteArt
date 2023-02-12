@@ -17,7 +17,7 @@ root.withdraw()
 class Image:
     # Load image
     def __init__(
-            self, path: str | Path | None = None, pos: tuple[int, int] = (0, 0), size: tuple[int, int] | None = None,
+            self, path: str | Path | None = None, pos: tuple[int, int] = (0, 0), size: tuple[int, int] | float | None = None,
             center_flag: bool = True, alpha: float = 1
     ) -> None:
 
@@ -33,7 +33,10 @@ class Image:
         self._pos = pos
 
         if size is not None:
-            pygame.transform.scale(self.img, size)
+            if isinstance(size, tuple):
+                pygame.transform.scale(self.img, size)
+            else:
+                pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
 
     # Display image to screen
     def draw(self, display: pygame.surface.Surface) -> None:
@@ -54,11 +57,14 @@ class Image:
 
         self.path = path
 
-    def resizeImage(self, size: tuple[int, int]) -> None:
+    def resizeImage(self, size: tuple[int, int] | float) -> None:
         self.img = pygame.image.load(self.path)
 
-        pygame.transform.scale(self.img, size)
-
+        if isinstance(size, tuple):
+            pygame.transform.scale(self.img, size)
+        else:
+            pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
+        
     @property
     def alpha(self) -> float:
         return self._alpha
