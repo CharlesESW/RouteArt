@@ -67,7 +67,18 @@ class Image:
         wid, height = self.img.get_size()
 
         if wid < rect[0] and height < rect[1]:
-            return
+            x_ratio = rect[0]/wid
+            y_ratio = rect[1]/height
+
+            if x_ratio < y_ratio:
+                ratio = rect[0]/wid
+                new_height = int(height*ratio)
+                self.resizeImage((rect[0], new_height))
+            else:
+                ratio = rect[1]/height
+                new_wid = int(wid*ratio)
+                self.resizeImage((new_wid, rect[1]))
+
         elif wid > rect[0] and height < rect[1]:
             ratio = wid/rect[0]
             new_height = int(height/ratio)
@@ -89,6 +100,9 @@ class Image:
                 ratio = height/rect[1]
                 new_wid = int(wid/ratio)
                 self.resizeImage((new_wid, rect[1]))
+
+
+        print(self.img.get_size())
         
 
     @property

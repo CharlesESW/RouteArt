@@ -156,7 +156,7 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
 
     return file_path
 
-def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float) -> Path:
+def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float, thickness: int = 3) -> Path:
     with open("lat_long.json", 'r') as f:
         info = convert_json_string_to_dict(f.read())
 
@@ -166,8 +166,8 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
 
     surf.fill((255, 255, 255, 0))
 
-    X_CONST = 40075000
-    Y_CONST = 111320
+    X_CONST = 6_378_137
+    Y_CONST = 111139
 
     points = []
     for point in info['drawing_points']:
@@ -176,21 +176,21 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
         dif_x = longitude - center['longitude']  # Find x_dif to center point
         dif_y = latitude - center['latitude']  # Find y_dif to center point
 
-        dif_x_m = dif_x * X_CONST * math.cos(math.radians(latitude)) / 360
+        dif_x_m = dif_x * X_CONST * math.pi / 180 * math.cos(latitude * math.pi / 180)
         dif_y_m = dif_y * Y_CONST
 
-        OSM_pixel = 2 * math.pi * 6_378_137 * math.cos(math.radians(latitude)) / (2**(zoom+8))
+        OSM_pixel = math.pi * 6_378_137 * math.cos(math.radians(latitude)) / (2**(zoom+8))
 
         x = dif_x_m / OSM_pixel
         y = dif_y_m / OSM_pixel
 
         x = int(x) + width/2
-        y = int(y) + height/2
+        y = height/2 - int(y)
 
         points.append((x, y))
 
     for (p1, p2) in zip(points, points[1:]):
-        pygame.draw.line(surf, (0, 0, 0), p1, p2)
+        pygame.draw.line(surf, (0, 0, 0), p1, p2, thickness)
 
     file_name = str(abs(hash(f"{width},{height},{center},{zoom},{info['drawing_points']}")))
     pygame.image.save(surf, f"Route_GPS_Drawings\\{file_name}.png")
