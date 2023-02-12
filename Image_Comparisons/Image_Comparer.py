@@ -89,7 +89,7 @@ def image_similarity(fp1, fp2):
     spectrum1 = 20 * np.log(cv2.magnitude(dtf_shift1[:, :, 0], dtf_shift1[:, :, 1]))
     spectrum2 = 20 * np.log(cv2.magnitude(dtf_shift2[:, :, 0], dtf_shift2[:, :, 1]))
 
-    error = mse(spectrum1,spectrum2)
+    error = 0.8 * mse(spectrum1,spectrum2)
 
     if error > 40:
         error = random.uniform(97.9, 99.9)
