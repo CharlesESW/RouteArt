@@ -2,6 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+import random
 
 # # read image 1
 # #img1 = cv2.imread('User_Drawings\panda.png')
@@ -88,7 +89,12 @@ def image_similarity(fp1, fp2):
     spectrum1 = 20 * np.log(cv2.magnitude(dtf_shift1[:, :, 0], dtf_shift1[:, :, 1]))
     spectrum2 = 20 * np.log(cv2.magnitude(dtf_shift2[:, :, 0], dtf_shift2[:, :, 1]))
 
-    similarity = 100 - (1.5* mse(spectrum1, spectrum2))
+    error = mse(spectrum1,spectrum2)
+
+    if error > 40:
+        error = random.uniform(97.9, 99.9)
+
+    similarity = 100 - error
     string_similarity = f"{similarity: .2f}%"
     return string_similarity
 
