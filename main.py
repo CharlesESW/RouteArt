@@ -62,6 +62,7 @@ pygame.init()
 pygame.display.set_caption("RouteArt")
 pygame.display.set_icon(pygame.image.load("Frontend\\Window_Icon.png"))
 
+
 def extract_current_location(raw_gps_string: str) -> dict[str, float]:
     raw_gps_data: dict = convert_json_string_to_dict(raw_gps_string.replace("'", "\""))
 
@@ -71,6 +72,7 @@ def extract_current_location(raw_gps_string: str) -> dict[str, float]:
         "latitude": raw_gps_data["network"]["latitude"],
         "longitude": raw_gps_data["network"]["longitude"]
     }
+
 
 def get_desired_background_map_image(width: int | float, height: int | float, zoom: int | float, latlon: dict[str, float] = None) -> Path:
     if isinstance(width, (int, float)):
@@ -114,6 +116,7 @@ def get_desired_background_map_image(width: int | float, height: int | float, zo
 
     return file_path
 
+
 def get_walking_background_map_image(width: int | float, height: int | float, zoom: int | float, marker_latlon: dict[str, float] = None) -> Path:
     if isinstance(width, (int, float)):
         if not 50 < width <= 10000:
@@ -142,6 +145,7 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
 
     file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{desired_map_original_centre},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     if not os.path.isfile(file_path):
+        # noinspection SpellCheckingInspection
         map_image_response = requests.get(
             f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{desired_map_original_centre["longitude"]},{desired_map_original_centre["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
             stream=True
@@ -155,6 +159,7 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
             raise FailedRequestError(response=map_image_response)
 
     return file_path
+
 
 def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float, thickness: int = 3) -> Path:
     with open("lat_long.json", 'r') as f:
@@ -179,13 +184,13 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
         dif_x_m = dif_x * X_CONST * math.pi / 180 * math.cos(latitude * math.pi / 180)
         dif_y_m = dif_y * Y_CONST
 
-        OSM_pixel = math.pi * 6_378_137 * math.cos(math.radians(latitude)) / (2**(zoom+8))
+        OSM_pixel = math.pi * 6_378_137 * math.cos(math.radians(latitude)) / (2 ** (zoom + 8))
 
         x = dif_x_m / OSM_pixel
         y = dif_y_m / OSM_pixel
 
-        x = int(x) + width/2
-        y = height/2 - int(y)
+        x = int(x) + width / 2
+        y = height / 2 - int(y)
 
         points.append((x, y))
 
@@ -220,16 +225,15 @@ def main():
     fine_zoom_out_button = Button(WINDOW, "-", pos=(6, 6), size=(20, 20), auto_size=False)
     fine_zoom_label = TextBox(WINDOW, "Fine zoom", pos=(6, 4))
 
-
     get_new_desired_map_centre_button = Button(WINDOW, "Centre map to current location", pos=(1, 5))
     confirm_desired_map_centre_button = Button(WINDOW, "Confirm map centre", pos=(1, 6))
     drawing = Image(WINDOW)
     walk_to_start_title = Paragraph(WINDOW, "Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(3, 4))
-    
+
     # Right hand map with pointers
     location_marker_map_image = Image(WINDOW, pos=(5, 3))
     start_walking_button = Button(WINDOW, "I am ready to start my route", pos=(3, 6))
-    
+
     # Right hand walk overlay
     walking_drawing_image = Image(WINDOW, pos=(5, 3))
 
@@ -259,7 +263,7 @@ def main():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mousedown = True
-            
+
             if event.type == pygame.VIDEORESIZE:
                 WINDOW.size = (event.w, event.h)
 
@@ -420,13 +424,13 @@ def main():
                 walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
 
             if finish_walking_button.click(mousedown):
-                    drawing.pos = (3, 3)
-                    drawing.alpha = 1
-                    walking_drawing_image.pos = (3, 3)
-                    comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
+                drawing.pos = (3, 3)
+                drawing.alpha = 1
+                walking_drawing_image.pos = (3, 3)
+                comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
 
-                    logger.debug("changing state to image_comparison")
-                    state = "image_comparison"
+                logger.debug("changing state to image_comparison")
+                state = "image_comparison"
 
         elif state == "image_comparison":
             mini_logo.draw(screen)
