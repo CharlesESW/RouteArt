@@ -132,13 +132,13 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
         raise TypeError("Parameter zoom must be an integer or a float.")
 
     with open(Path("lat_long.json"), "r") as file:
-        original_center: dict[str, float] = load_json_file(file)["original_center"]
+        desired_map_original_center: dict[str, float] = load_json_file(file)["desired_map_original_center"]
 
     current_location = extract_current_location(raw_gps_string=get_raw_location_data())
-    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{original_center},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{desired_map_original_center},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     if not os.path.isfile(file_path):
         map_image_response = requests.get(
-            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{original_center["longitude"]},{original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
+            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{desired_map_original_center["longitude"]},{desired_map_original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
             stream=True
         )
 
@@ -158,18 +158,19 @@ def main():
     big_logo = Image("Frontend\\Logo.png", pos=(600, 320), size=0.6)  # TODO: change position, width & height relative to screen size
     title = TextBox("RouteArt", pos=(600, 665), font_size=80)
     import_drawing_button = Button("Import drawing", pos=(600, 730))  # TODO: change position, width & height relative to screen size
-    mini_logo = Image("Frontend\\Logo.png", pos=(130, 130), size=0.18)  # TODO: change position, width & height relative to screen size
-    desired_map_image = Image(pos=(150, 150))  # TODO: change position relative to screen size
-    course_zoom_in_button = Button("+", (700, 500))
-    course_zoom_out_button = Button("-", (700, 560))
-    course_zoom_label = TextBox("Course zoom", (700, 440))
-    fine_zoom_in_button = Button("+", (770, 500))
-    fine_zoom_out_button = Button("-", (770, 560))
-    fine_zoom_label = TextBox("Fine zoom", (770, 440))
-    get_new_desired_map_center_button = Button("Center map to current location", (600, 700))  # TODO: change position, width & height relative to screen size
-    confirm_desired_map_center_button = Button("Confirm map center", (600, 760))  # TODO: change position, width & height relative to screen size
+    mini_logo = Image("Frontend\\Logo.png", pos=(105, 105), size=0.18)  # TODO: change position, width & height relative to screen size
+    desired_map_image = Image(pos=(600, 330))  # TODO: change position relative to screen size
+    course_zoom_in_button = Button("+", pos=(620, 760))
+    course_zoom_out_button = Button("-", pos=(650, 760))
+    course_zoom_label = TextBox("Course zoom", pos=(640, 700))
+    fine_zoom_in_button = Button("+", pos=(780, 760))
+    fine_zoom_out_button = Button("-", pos=(810, 760))
+    fine_zoom_label = TextBox("Fine zoom", pos=(790, 700))
+    get_new_desired_map_center_button = Button("Center map to current location", pos=(400, 700))  # TODO: change position, width & height relative to screen size
+    confirm_desired_map_center_button = Button("Confirm map center", pos=(400, 760))  # TODO: change position, width & height relative to screen size
     drawing = Image()
-    location_marker_map_image = Image(pos=(600, 412))
+    location_marker_map_image = Image(pos=(900, 460))
+    start_walking_button = Button("I am ready to start my route", pos=(600, 700))
 
     state = "import_drawing"
     desired_map_zoom = 4
@@ -185,7 +186,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mousedown = True
 
-        screen.fill((255, 255, 255))
+        screen.fill((255, 0, 255))
 
         if state == "import_drawing":
             big_logo.draw(screen)
@@ -194,21 +195,29 @@ def main():
 
             if import_drawing_button.click(mousedown):
                 drawing_file_path = getFile()
-                logger.debug(drawing_file_path)
+                logger.debug(drawing_file_path or "No file chosen")
 
                 if drawing_file_path:
                     drawing.reloadImage(drawing_file_path)
                     logger.debug("file found")
 
+                    drawing.fitToRect((760, 630))
+
+                    drawing_width, drawing_height = drawing.img.get_size()
+
                     desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=get_raw_location_data())
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+
+                    drawing.pos = (600, 330)  # TODO: change position relative to screen size
+                    drawing.alpha = 0.25
 
                     logger.debug("changing state to get_desired_map")
                     state = "get_desired_map"
 
         elif state == "get_desired_map":
             desired_map_image.draw(screen)
+            drawing.draw(screen)
             mini_logo.draw(screen)
             course_zoom_in_button.draw(screen)
             course_zoom_out_button.draw(screen)
@@ -224,40 +233,62 @@ def main():
                     logger.debug("course zoom in")
                     desired_map_zoom += 1
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    drawing_width, drawing_height = drawing.img.get_size()
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif course_zoom_out_button.click(mousedown):
                 if desired_map_zoom - 1 >= 1:
                     logger.debug("course zoom out")
                     desired_map_zoom -= 1
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    drawing_width, drawing_height = drawing.img.get_size()
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif fine_zoom_in_button.click(mousedown):
                 if desired_map_zoom + 0.1 <= 20:
                     logger.debug("fine zoom in")
                     desired_map_zoom += 0.1
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    drawing_width, drawing_height = drawing.img.get_size()
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif fine_zoom_out_button.click(mousedown):
                 if desired_map_zoom - 0.1 >= 1:
                     logger.debug("fine zoom out")
                     desired_map_zoom -= 0.1
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    drawing_width, drawing_height = drawing.img.get_size()
+
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif get_new_desired_map_center_button.click(mousedown):
                 logger.debug("update center")
 
+                drawing_width, drawing_height = drawing.img.get_size()
+
                 desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=get_raw_location_data())
-                desired_map_image.reloadImage(get_desired_background_map_image(400, 400, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif confirm_desired_map_center_button.click(mousedown):
+                desired_map_image.pos = (290, 460)  # TODO: change position relative to screen size
+                drawing.pos = (290, 460)  # TODO: change position relative to screen size
+                drawing.alpha = 0.25
+
+                drawing_width, drawing_height = drawing.img.get_size()
+
+                location_marker_map_image.reloadImage(get_walking_background_map_image(drawing_width, drawing_height, desired_map_zoom))
+
                 logger.debug("changing state to pre_walk")
                 state = "pre_walk"
 
-        # elif state == "pre_walk":
-        #     mini_logo.draw(screen)
-        #     if desired_map_image.pos != (600, 412):  # TODO: change position relative to screen size
-        #         desired_map_image.pos = (600, 412)  # TODO: change position relative to screen size
-        #     desired_map_image.draw(screen)
-        #     drawing
+        elif state == "pre_walk":
+            mini_logo.draw(screen)
+            desired_map_image.draw(screen)
+            drawing.draw(screen)
+            location_marker_map_image.draw(screen)
+            start_walking_button.draw(screen)
+
+            if start_walking_button.click(mousedown):
+                logger.debug("changing state to walking")
+                state = "walking"
 
 
 
