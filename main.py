@@ -65,7 +65,7 @@ pygame.display.set_icon(pygame.image.load("Frontend\\Window_Icon.png"))
 def extract_current_location(raw_gps_string: str) -> dict[str, float]:
     raw_gps_data: dict = convert_json_string_to_dict(raw_gps_string.replace("'", "\""))
 
-    logger.info("Raw GPS data successfully extracted from JSON.")
+    logger.debug("Raw GPS data successfully extracted from JSON.")
 
     return {
         "latitude": raw_gps_data["network"]["latitude"],
@@ -110,7 +110,7 @@ def get_desired_background_map_image(width: int | float, height: int | float, zo
         else:
             raise FailedRequestError(response=map_image_response)
     else:
-        logger.debug("cached image already exists")
+        logger.info("Cached image already exists")
 
     return file_path
 
