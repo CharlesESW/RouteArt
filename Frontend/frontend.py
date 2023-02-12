@@ -43,6 +43,7 @@ class Image:
                 display.blit(self.img, (x-wid/2, y-height/2))
             else:
                 display.blit(self.img, self.pos)
+        raise BaseException("You did a little fucky wucky silly billy boo bah")
 
     # Reload image
     def reloadImage(self, path: str | Path):
