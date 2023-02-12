@@ -100,9 +100,6 @@ class Image:
                 ratio = height/rect[1]
                 new_wid = int(wid/ratio)
                 self.resizeImage((new_wid, rect[1]))
-
-
-        print(self.img.get_size())
         
 
     @property

@@ -63,8 +63,6 @@ def mse(img1, img2):
 # plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
 # plt.show()
 #
-# print("The images are ", 100 - mse(magnitude_spectrum1, magnitude_spectrum2), "% similar")
-
 
 def image_similarity(fp1, fp2):
     fp1 = str(fp1)
@@ -90,8 +88,8 @@ def image_similarity(fp1, fp2):
     spectrum1 = 20 * np.log(cv2.magnitude(dtf_shift1[:, :, 0], dtf_shift1[:, :, 1]))
     spectrum2 = 20 * np.log(cv2.magnitude(dtf_shift2[:, :, 0], dtf_shift2[:, :, 1]))
 
-    similarity = 100 - mse(spectrum1, spectrum2)
-    string_similarity = f"{similarity: .2f}"
+    similarity = 100 - (1.5* mse(spectrum1, spectrum2))
+    string_similarity = f"{similarity: .2f}%"
     return string_similarity
 
 
