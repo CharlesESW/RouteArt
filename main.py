@@ -213,28 +213,28 @@ def main():
     desired_map_image = Image(WINDOW, pos=(3, 2))
 
     # Zoom in and out w/ Labels
-    course_zoom_in_button = Button(WINDOW, "+", pos=(5, 5))
-    course_zoom_out_button = Button(WINDOW, "-", pos=(5, 6))
+    course_zoom_in_button = Button(WINDOW, "+", pos=(5, 5), size=(20, 20), auto_size=False)
+    course_zoom_out_button = Button(WINDOW, "-", pos=(5, 6), size=(20, 20), auto_size=False)
     course_zoom_label = TextBox(WINDOW, "Course zoom", pos=(5, 4))
-    fine_zoom_in_button = Button(WINDOW, "+", pos=(6, 5))
-    fine_zoom_out_button = Button(WINDOW, "-", pos=(6, 6))
+    fine_zoom_in_button = Button(WINDOW, "+", pos=(6, 5), size=(20, 20), auto_size=False)
+    fine_zoom_out_button = Button(WINDOW, "-", pos=(6, 6), size=(20, 20), auto_size=False)
     fine_zoom_label = TextBox(WINDOW, "Fine zoom", pos=(6, 4))
 
 
     get_new_desired_map_center_button = Button(WINDOW, "Center map to current location", pos=(1, 5))
     confirm_desired_map_center_button = Button(WINDOW, "Confirm map center", pos=(1, 6))
     drawing = Image(WINDOW)
-    walk_to_start_title = Paragraph(WINDOW, "Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(3, 5))
+    walk_to_start_title = Paragraph(WINDOW, "Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(3, 4))
     
     # Right hand map with pointers
     location_marker_map_image = Image(WINDOW, pos=(5, 3))
-    start_walking_button = Button(WINDOW, "I am ready to start my route", pos=(3, 4))
+    start_walking_button = Button(WINDOW, "I am ready to start my route", pos=(3, 6))
     
     # Right hand walk overlay
     walking_drawing_image = Image(WINDOW, pos=(5, 3))
 
-    add_new_walking_point_button = Button(WINDOW, "Add new route drawing point", pos=(3, 6))
-    finish_walking_button = Button(WINDOW, "Finish route", pos=(3, 5))
+    add_new_walking_point_button = Button(WINDOW, "Add new route drawing point", pos=(3, 5))
+    finish_walking_button = Button(WINDOW, "Finish route", pos=(3, 6))
     comparison_percentage = TextBox(WINDOW, "", font_size=28, pos=(3, 6))
 
     state = "import_drawing"
