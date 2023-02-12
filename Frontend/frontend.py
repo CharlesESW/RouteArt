@@ -155,8 +155,8 @@ class Button:
         else:
             x, y = self._pos
 
-        pygame.draw.rect(display, (0, 0, 0), (x, y, *self.dims), 2 * self.border_curve)
-        pygame.draw.rect(display, self.bg_colour, (*map(lambda x: x + self.border, (x, y)), *map(lambda x: x - 2 * self.border, self.dims)))
+        pygame.draw.rect(display, (0, 0, 0), (x, y, *self.dims), border_radius=2 * self.border_curve)
+        pygame.draw.rect(display, self.bg_colour, (*map(lambda x: x + self.border, (x, y)), *map(lambda x: x - 2 * self.border, self.dims)), border_radius=2 * self.border_curve)
 
         text_dims = self.rendText.get_rect().size
         x, y = map(lambda x: x[0] + (x[1] - x[2]) / 2, zip((x, y), self.dims, text_dims))
