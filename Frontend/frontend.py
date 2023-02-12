@@ -63,6 +63,34 @@ class Image:
         else:
             self.img = pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
         
+    def fitToRect(self, rect: tuple[int, int]) -> None:
+        wid, height = self.img.get_size()
+
+        if wid < rect[0] and height < rect[1]:
+            return
+        elif wid > rect[0] and height < rect[1]:
+            ratio = wid/rect[0]
+            new_height = int(height/ratio)
+            self.resizeImage((rect[0], new_height))
+
+        elif height > rect[1] and wid < rect[0]:
+            ratio = height/rect[1]
+            new_wid = int(wid/ratio)
+            self.resizeImage((new_wid, rect[1]))
+        else:
+            x_ratio = wid/rect[0]
+            y_ratio = height/rect[1]
+
+            if x_ratio > y_ratio:
+                ratio = wid/rect[0]
+                new_height = int(height/ratio)
+                self.resizeImage((rect[0], new_height))
+            else:
+                ratio = height/rect[1]
+                new_wid = int(wid/ratio)
+                self.resizeImage((new_wid, rect[1]))
+        
+
     @property
     def alpha(self) -> float:
         return self._alpha
