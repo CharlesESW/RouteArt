@@ -4,6 +4,7 @@ from os import getenv
 from dotenv import load_dotenv
 import requests
 import pygame
+import math
 from json import loads as convert_string_json_to_dict
 from pathlib import Path
 
@@ -99,26 +100,50 @@ def get_OSM_image_path_location(width: int | float, height: int | float, zoom: i
 
     return file_path
 
-def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, centre: tuple[int | float, int | float]):
+def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, center: tuple[int | float, int | float]) -> str:
     with open("lat_long.json", 'r') as f:
         info = convert_string_json_to_dict(f.read())
 
-    points = [((centre[0]-x['longitude'])*(4**zoom)+width/2, height/2-((centre[1]-x['latitude']))*(4**zoom)) for x in info["drawing_points"]]
+    surf = pygame.Surface((width, height), pygame.SRCALPHA, 32)
 
-    surf = pygame.Surface((width, height))
+    surf.fill((255, 255, 255, 0))
 
-    surf.fill((255, 255, 255))
+    X_CONST = 40075000
+    Y_CONST = 111320
+
+    points = []
+    for point in info['drawing_points']:
+        longitude = point['longitude']
+        latitude = point['latitude']
+        dif_x = longitude - center[0] # Find x_dif to center point
+        dif_y = latitude - center[1] # Find y_dif to center point
+
+        dif_x_m = dif_x * X_CONST * math.cos(math.radians(latitude)) / 360
+        dif_y_m = dif_y * Y_CONST
+
+        OSM_pixel = 2 * math.pi * 6_378_137 * math.cos(math.radians(latitude)) / (2**(zoom+8))
+
+        x = dif_x_m / OSM_pixel
+        y = dif_y_m / OSM_pixel
+
+        x = int(x) + width/2
+        y = int(y) + height/2
+
+        points.append((x, y))
 
     for (p1, p2) in zip(points, points[1:]):
         pygame.draw.line(surf, (0, 0, 0), p1, p2)
 
-    pygame.image.save(surf, "temp.jpg")
+    file_name = str(abs(hash(f"{width},{height},{center},{zoom},{info['drawing_points']}")))
+    pygame.image.save(surf, f"Route_GPS_Drawings\\{file_name}.png")
+
+    return f"Route_GPS_Drawings\\{file_name}.png"
 
 
 def main():
     # print(get_OSM_image_path_location(600, 600, 17))
 
-    GPS_to_Image(360, 180, 11, (-1.1873156, 52.9532518))
+    GPS_to_Image(180, 180, 20, (-1.1873156, 52.9532518))
 
 
 if __name__ == "__main__":
