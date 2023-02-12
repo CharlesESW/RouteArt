@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from Frontend.frontend import Button, Image, TextBox, getFile
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
-from Image_Comparisons.Image_Comparer import image_similarity
+# from Image_Comparisons.Image_Comparer import image_similarity
 
 load_dotenv()
 
@@ -156,9 +156,11 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
 
     return file_path
 
-def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, center: tuple[int | float, int | float]) -> str:
+def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float) -> Path:
     with open("lat_long.json", 'r') as f:
-        info = convert_string_json_to_dict(f.read())
+        info = convert_json_string_to_dict(f.read())
+
+    center = info["desired_map_original_center"]
 
     surf = pygame.Surface((width, height), pygame.SRCALPHA, 32)
 
@@ -171,8 +173,8 @@ def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, cen
     for point in info['drawing_points']:
         longitude = point['longitude']
         latitude = point['latitude']
-        dif_x = longitude - center[0] # Find x_dif to center point
-        dif_y = latitude - center[1] # Find y_dif to center point
+        dif_x = longitude - center['longitude']  # Find x_dif to center point
+        dif_y = latitude - center['latitude']  # Find y_dif to center point
 
         dif_x_m = dif_x * X_CONST * math.cos(math.radians(latitude)) / 360
         dif_y_m = dif_y * Y_CONST
@@ -193,16 +195,7 @@ def GPS_to_Image(width: int | float, height: int | float, zoom: int | float, cen
     file_name = str(abs(hash(f"{width},{height},{center},{zoom},{info['drawing_points']}")))
     pygame.image.save(surf, f"Route_GPS_Drawings\\{file_name}.png")
 
-    return f"Route_GPS_Drawings\\{file_name}.png"
-
-
-def main():
-    # print(get_OSM_image_path_location(600, 600, 17))
-
-    GPS_to_Image(180, 180, 20, (-1.1873156, 52.9532518))
-
-def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float) -> Path:
-    pass
+    return Path(f"Route_GPS_Drawings\\{file_name}.png")
 
 
 def main():
@@ -228,7 +221,7 @@ def main():
     walking_drawing_image = Image(pos=(900, 460))  # TODO: change position, width & height relative to screen size
     add_new_walking_point_button = Button("Add new route drawing point", pos=(600, 755))  # TODO: change position, width & height relative to screen size
     finish_walking_button = Button("Finish route", pos=(600, 790))
-    comparison_percentage = TextBox("", font_size=28, pos=(600, 790))
+    comparison_percentage = TextBox("", font_size=28, pos=(600, 720))
 
     state = "import_drawing"
     desired_map_zoom = 4
@@ -405,7 +398,8 @@ def main():
                 drawing.pos = (600, 330)  # TODO: change position relative to screen size
                 drawing.alpha = 1
                 walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
-                comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
+                # comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
+                comparison_percentage.text = f"Your route was ****% similar to the uploaded drawing!"
 
                 logger.debug("changing state to image_comparison")
                 state = "image_comparison"
