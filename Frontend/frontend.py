@@ -50,6 +50,8 @@ class Image:
         self.img = pygame.image.load(path)
         self.img.set_alpha(int(self._alpha * 255))
 
+        self.path = path
+
     def resizeImage(self, size: tuple[int, int]) -> None:
         self.img = pygame.image.load(self.path)
 
