@@ -34,9 +34,9 @@ class Image:
 
         if size is not None:
             if isinstance(size, tuple):
-                pygame.transform.scale(self.img, size)
+                self.img = pygame.transform.scale(self.img, size)
             else:
-                pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
+                self.img = pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
 
     # Display image to screen
     def draw(self, display: pygame.surface.Surface) -> None:
@@ -61,9 +61,9 @@ class Image:
         self.img = pygame.image.load(self.path)
 
         if isinstance(size, tuple):
-            pygame.transform.scale(self.img, size)
+            self.img = pygame.transform.scale(self.img, size)
         else:
-            pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
+            self.img = pygame.transform.scale(self.img, [*map(lambda x: int(x*size), self.img.get_rect().size)])
         
     @property
     def alpha(self) -> float:
