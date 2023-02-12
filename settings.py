@@ -1,5 +1,9 @@
 from os import getenv
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 ACCEPTABLE_LOG_LEVELS = ("debug", "info", "warning", "error", "critical")
 LOG_LEVEL = getenv("LOG_LEVEL", "warning").lower()
 if LOG_LEVEL not in ACCEPTABLE_LOG_LEVELS:

@@ -19,6 +19,7 @@ PRETEND_SOCKET_WAIT_TIME = float(getenv("PRETEND_SOCKET_WAIT_TIME", "3"))
 if not 0.1 <= PRETEND_SOCKET_WAIT_TIME <= 1000:
     raise ValueError(f"Environment variable PRETEND_SOCKET_WAIT_TIME must be between 0.1 & 1000.")
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 if LOG_LEVEL == ACCEPTABLE_LOG_LEVELS[0]:
     logger.setLevel(logging.DEBUG)
