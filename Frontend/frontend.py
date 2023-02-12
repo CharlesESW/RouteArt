@@ -7,8 +7,6 @@ from tkinter import filedialog
 
 pygame.font.init()
 
-FONT = pygame.font.SysFont("Helvetica", 20)
-
 root = tk.Tk()
 root.withdraw()
 
@@ -86,7 +84,7 @@ class Image:
 class Button:
     def __init__(
         self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = False,
-        border: int = 2, border_curve: bool = False, auto_size: bool = True) -> None:
+        border: int = 2, border_curve: bool = False, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20) -> None:
         self._text = text
         self._pos = pos
         self.dims = size
@@ -97,14 +95,16 @@ class Button:
         self.auto_size = auto_size
         self.bg_colour = (255, 255, 255)
 
+        self.font = pygame.font.SysFont(font_family, font_size)
+
         # Render text
-        self.rendText = FONT.render(self._text, True, (0, 0, 0))
+        self.rendText = self.font.render(self._text, True, (0, 0, 0))
 
         if self.dims is None and not self.auto_size:
             raise BaseException("Fuck you Matt you caused this stupid fucking error to occur this would not have to exist if you didn't want to do the silly billy math just put in some fucking dimensions it's just trial and error you fuck")
 
         if self.auto_size:
-            self.dims = [*map(lambda x: x+2, self.rendText.get_rect().size)]
+            self.dims = [*map(lambda x: x+8, self.rendText.get_rect().size)]
 
     def draw(self, display: pygame.surface.Surface):
         if self.c_flag:
@@ -156,7 +156,7 @@ class Button:
         self._text = val
 
         # Re-render text
-        self.rendText = FONT.render(self._text, True, (0, 0, 0))
+        self.rendText = self.font.render(self._text, True, (0, 0, 0))
 
         if self.auto_size:
             self.dims = self.rendText.get_rect().size
@@ -186,12 +186,15 @@ class Button:
         self.dims = (self.dims[0], val)
 
 class TextBox:
-    def __init__(self, text: str, pos: tuple[int, int], centre_flag: bool = False) -> None:
+    def __init__(self, text: str, pos: tuple[int, int], centre_flag: bool = False, font_family: str = "Helvetica", font_size: int = 20) -> None:
         self._text = text
         self._pos = pos
 
         self.c_flag = centre_flag
-        self.rendText = FONT.render(text, True, (0, 0, 0))
+
+        self.font = pygame.font.SysFont(font_family, font_size)
+
+        self.rendText = self.font.render(text, True, (0, 0, 0))
         
     def draw(self, screen) -> None:
         if self.c_flag:
@@ -208,7 +211,7 @@ class TextBox:
     @text.setter
     def text(self, text: str) -> None:
         self._text = text
-        self.rendText = FONT.render(text, True, (0, 0, 0))
+        self.rendText = self.font.render(text, True, (0, 0, 0))
 
     @property
     def pos(self) -> tuple[int, int]:
