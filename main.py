@@ -265,7 +265,9 @@ def main():
 
                     drawing_width, drawing_height = drawing.img.get_size()
 
-                    desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=get_raw_location_data())
+                    raw = get_raw_location_data()
+                    logger.debug(raw)
+                    desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=raw)
 
                     desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
 
@@ -325,7 +327,9 @@ def main():
 
                 drawing_width, drawing_height = drawing.img.get_size()
 
-                desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=get_raw_location_data())
+                raw = get_raw_location_data()
+                logger.debug(raw)
+                desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=raw)
                 desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif confirm_desired_map_center_button.click(mousedown):
                 with open(Path("lat_long.json"), "r") as file:
@@ -351,7 +355,9 @@ def main():
                 drawing.pos = (290, 460)  # TODO: change position relative to screen size
                 drawing.alpha = 0.25
 
-                current_location = extract_current_location(get_raw_location_data())
+                raw = get_raw_location_data()
+                logger.debug(raw)
+                current_location = extract_current_location(raw)
 
                 with open(Path("lat_long.json"), "r") as file:
                     lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
@@ -379,7 +385,9 @@ def main():
             finish_walking_button.draw(screen)
 
             if add_new_walking_point_button.click(mousedown):
-                current_location = extract_current_location(get_raw_location_data())
+                raw = get_raw_location_data()
+                logger.debug(raw)
+                current_location = extract_current_location(raw)
 
                 with open(Path("lat_long.json"), "r") as file:
                     lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
