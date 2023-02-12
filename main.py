@@ -2,7 +2,7 @@ import logging
 import os.path
 import shutil
 import sys
-from json import load as load_json_file, loads as convert_json_string_to_dict
+from json import load as load_json_file, loads as convert_json_string_to_dict, dump as dump_to_json
 from os import getenv
 from pathlib import Path
 
@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from Frontend.frontend import Button, Image, TextBox, getFile
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
+from Image_Comparisons.Image_Comparer import image_similarity
 
 load_dotenv()
 
@@ -112,7 +113,7 @@ def get_desired_background_map_image(width: int | float, height: int | float, zo
 
     return file_path
 
-def get_walking_background_map_image(width: int | float, height: int | float, zoom: int | float) -> Path:
+def get_walking_background_map_image(width: int | float, height: int | float, zoom: int | float, marker_latlon: dict[str, float] = None) -> Path:
     if isinstance(width, (int, float)):
         if not 50 < width <= 10000:
             raise ValueError("Parameter width must be between 50 & 10000.")
@@ -133,8 +134,11 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
 
     with open(Path("lat_long.json"), "r") as file:
         desired_map_original_center: dict[str, float] = load_json_file(file)["desired_map_original_center"]
+    if not marker_latlon:
+        current_location = extract_current_location(raw_gps_string=get_raw_location_data())
+    else:
+        current_location = marker_latlon
 
-    current_location = extract_current_location(raw_gps_string=get_raw_location_data())
     file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{desired_map_original_center},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     if not os.path.isfile(file_path):
         map_image_response = requests.get(
@@ -150,6 +154,10 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
             raise FailedRequestError(response=map_image_response)
 
     return file_path
+
+
+def get_walking_drawing_image_path(width: int | float, height: int | float, zoom: int | float) -> Path:
+    pass
 
 
 def main():
@@ -169,12 +177,26 @@ def main():
     get_new_desired_map_center_button = Button("Center map to current location", pos=(400, 700))  # TODO: change position, width & height relative to screen size
     confirm_desired_map_center_button = Button("Confirm map center", pos=(400, 760))  # TODO: change position, width & height relative to screen size
     drawing = Image()
-    location_marker_map_image = Image(pos=(900, 460))
-    start_walking_button = Button("I am ready to start my route", pos=(600, 700))
+    walk_to_start_title = TextBox("Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(600, 700))  # TODO: change position, width & height relative to screen size
+    location_marker_map_image = Image(pos=(900, 460))  # TODO: change position, width & height relative to screen size
+    start_walking_button = Button("I am ready to start my route", pos=(600, 780))  # TODO: change position, width & height relative to screen size
+    walking_drawing_image = Image(pos=(900, 460))  # TODO: change position, width & height relative to screen size
+    add_new_walking_point_button = Button("Add new route drawing point", pos=(600, 755))  # TODO: change position, width & height relative to screen size
+    finish_walking_button = Button("Finish route", pos=(600, 790))
+    comparison_percentage = TextBox("", font_size=28, pos=(600, 790))
 
     state = "import_drawing"
     desired_map_zoom = 4
     desired_map_cache_still_deciding_center = {}
+
+    with open(Path("lat_long.json"), "r") as file:
+        lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
+
+    lat_longJSON["drawing_points"] = []
+    lat_longJSON["desired_map_original_center"] = {}
+
+    with open(Path("lat_long.json"), "w") as file:
+        dump_to_json(lat_longJSON, file)
 
     while True:
         mousedown = False
@@ -268,13 +290,13 @@ def main():
                 desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=get_raw_location_data())
                 desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
             elif confirm_desired_map_center_button.click(mousedown):
-                desired_map_image.pos = (290, 460)  # TODO: change position relative to screen size
-                drawing.pos = (290, 460)  # TODO: change position relative to screen size
-                drawing.alpha = 0.25
+                with open(Path("lat_long.json"), "r") as file:
+                    lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
 
-                drawing_width, drawing_height = drawing.img.get_size()
+                lat_longJSON["desired_map_original_center"] = desired_map_cache_still_deciding_center
 
-                location_marker_map_image.reloadImage(get_walking_background_map_image(drawing_width, drawing_height, desired_map_zoom))
+                with open(Path("lat_long.json"), "w") as file:
+                    dump_to_json(lat_longJSON, file)
 
                 logger.debug("changing state to pre_walk")
                 state = "pre_walk"
@@ -283,14 +305,71 @@ def main():
             mini_logo.draw(screen)
             desired_map_image.draw(screen)
             drawing.draw(screen)
-            location_marker_map_image.draw(screen)
             start_walking_button.draw(screen)
+            walk_to_start_title.draw(screen)
 
             if start_walking_button.click(mousedown):
+                desired_map_image.pos = (290, 460)  # TODO: change position relative to screen size
+                drawing.pos = (290, 460)  # TODO: change position relative to screen size
+                drawing.alpha = 0.25
+
+                current_location = extract_current_location(get_raw_location_data())
+
+                with open(Path("lat_long.json"), "r") as file:
+                    lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
+
+                lat_longJSON["drawing_points"].append(current_location)
+
+                with open(Path("lat_long.json"), "w") as file:
+                    dump_to_json(lat_longJSON, file)
+
+                drawing_width, drawing_height = drawing.img.get_size()
+
+                location_marker_map_image.reloadImage(get_walking_background_map_image(drawing_width, drawing_height, desired_map_zoom, current_location))
+                walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
+
                 logger.debug("changing state to walking")
                 state = "walking"
 
+        elif state == "walking":
+            mini_logo.draw(screen)
+            desired_map_image.draw(screen)
+            drawing.draw(screen)
+            location_marker_map_image.draw(screen)
+            walking_drawing_image.draw(screen)
+            add_new_walking_point_button.draw(screen)
+            finish_walking_button.draw(screen)
 
+            if add_new_walking_point_button.click(mousedown):
+                current_location = extract_current_location(get_raw_location_data())
+
+                with open(Path("lat_long.json"), "r") as file:
+                    lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
+
+                lat_longJSON["drawing_points"].append(current_location)
+
+                with open(Path("lat_long.json"), "w") as file:
+                    dump_to_json(lat_longJSON, file)
+
+                drawing_width, drawing_height = drawing.img.get_size()
+
+                location_marker_map_image.reloadImage(get_walking_background_map_image(drawing_width, drawing_height, desired_map_zoom, current_location))
+                walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
+
+            elif finish_walking_button.click(mousedown):
+                drawing.pos = (600, 330)
+                drawing.alpha = 1
+                walking_drawing_image.pos = (600, 330)
+                comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
+
+                logger.debug("changing state to image_comparison")
+                state = "image_comparison"
+
+        elif state == "image_comparison":
+            mini_logo.draw(screen)
+            drawing.draw(screen)
+            walking_drawing_image.draw(screen)
+            comparison_percentage.draw(screen)
 
         pygame.display.flip()
 
