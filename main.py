@@ -384,7 +384,7 @@ def main():
             add_new_walking_point_button.draw(screen)
             finish_walking_button.draw(screen)
 
-            if add_new_walking_point_button.click(mousedown):
+            if add_new_walking_point_button.click(mousedown) or finish_walking_button.click(mousedown):
                 raw = get_raw_location_data()
                 logger.debug(raw)
                 current_location = extract_current_location(raw)
@@ -402,14 +402,14 @@ def main():
                 location_marker_map_image.reloadImage(get_walking_background_map_image(drawing_width, drawing_height, desired_map_zoom, current_location))
                 walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
 
-            elif finish_walking_button.click(mousedown):
-                drawing.pos = (600, 330)  # TODO: change position relative to screen size
-                drawing.alpha = 1
-                walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
-                comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
+                if finish_walking_button.click(mousedown):
+                    drawing.pos = (600, 330)  # TODO: change position relative to screen size
+                    drawing.alpha = 1
+                    walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
+                    comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
 
-                logger.debug("changing state to image_comparison")
-                state = "image_comparison"
+                    logger.debug("changing state to image_comparison")
+                    state = "image_comparison"
 
         elif state == "image_comparison":
             mini_logo.draw(screen)
