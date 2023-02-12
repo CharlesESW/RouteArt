@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from Frontend.frontend import Button, Image, TextBox, getFile
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
-# from Image_Comparisons.Image_Comparer import image_similarity
+from Image_Comparisons.Image_Comparer import image_similarity
 
 load_dotenv()
 
@@ -406,8 +406,7 @@ def main():
                 drawing.pos = (600, 330)  # TODO: change position relative to screen size
                 drawing.alpha = 1
                 walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
-                # comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
-                comparison_percentage.text = f"Your route was ****% similar to the uploaded drawing!"
+                comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
 
                 logger.debug("changing state to image_comparison")
                 state = "image_comparison"
