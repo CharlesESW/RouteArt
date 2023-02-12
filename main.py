@@ -199,7 +199,7 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
 
 
 def main():
-    screen = pygame.display.set_mode((1200, 825))  # TODO: make screen size variable
+    screen = pygame.display.set_mode((1200, 825), pygame.RESIZABLE)  # TODO: make screen size variable
 
     big_logo = Image("Frontend\\Logo.png", pos=(600, 320), size=0.6)  # TODO: change position, width & height relative to screen size
     title = TextBox("RouteArt", pos=(600, 665), font_size=80)
