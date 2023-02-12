@@ -3,6 +3,8 @@ from os import getenv
 
 from dotenv import load_dotenv
 
+from exceptions import SocketDataError
+
 load_dotenv()
 
 HOST_IP = getenv("SOCKET_HOST_IP")
@@ -24,5 +26,4 @@ def get_raw_location_data() -> str:
         if content != "{}":
             return content
 
-    raise BaseException("Error! Bad input")
-    
+    raise SocketDataError(socket_data=contents)

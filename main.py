@@ -91,15 +91,15 @@ def get_desired_background_map_image(width: int | float, height: int | float, zo
     else:
         raise TypeError("Parameter zoom must be an integer or a float.")
     if not latlon:
-        map_center = extract_current_location(raw_gps_string=get_raw_location_data())
+        map_centre = extract_current_location(raw_gps_string=get_raw_location_data())
     else:
-        map_center = latlon
+        map_centre = latlon
 
-    file_path = Path(f"""Desired_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
-    logger.debug(f"{OSM_MAP_STYLE},{width},{height},{map_center},{zoom},{GEOAPIFY_API_KEY}")
+    file_path = Path(f"""Desired_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{map_centre},{zoom},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    logger.debug(f"{OSM_MAP_STYLE},{width},{height},{map_centre},{zoom},{GEOAPIFY_API_KEY}")
     if not os.path.isfile(file_path):
         map_image_response = requests.get(
-            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_center["longitude"]},{map_center["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
+            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{map_centre["longitude"]},{map_centre["latitude"]}&zoom={zoom}&apiKey={GEOAPIFY_API_KEY}""",
             stream=True
         )
 
@@ -134,16 +134,16 @@ def get_walking_background_map_image(width: int | float, height: int | float, zo
         raise TypeError("Parameter zoom must be an integer or a float.")
 
     with open(Path("lat_long.json"), "r") as file:
-        desired_map_original_center: dict[str, float] = load_json_file(file)["desired_map_original_center"]
+        desired_map_original_centre: dict[str, float] = load_json_file(file)["desired_map_original_centre"]
     if not marker_latlon:
         current_location = extract_current_location(raw_gps_string=get_raw_location_data())
     else:
         current_location = marker_latlon
 
-    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{desired_map_original_center},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
+    file_path = Path(f"""Walking_Background_Map_Images/{(str(abs(hash(f"{OSM_MAP_STYLE},{width},{height},{desired_map_original_centre},{zoom},{current_location},{GEOAPIFY_API_KEY}"))) + MAP_IMAGE_FILE_EXTENSION)}""")
     if not os.path.isfile(file_path):
         map_image_response = requests.get(
-            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{desired_map_original_center["longitude"]},{desired_map_original_center["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
+            f"""https://maps.geoapify.com/v1/staticmap?style={OSM_MAP_STYLE}&width={width}&height={height}&center=lonlat:{desired_map_original_centre["longitude"]},{desired_map_original_centre["latitude"]}&zoom={zoom}&marker=lonlat:{current_location["longitude"]},{current_location["latitude"]};type:awesome;color:red;icon:user;iconsize:large;whitecircle:no&apiKey={GEOAPIFY_API_KEY}""",
             stream=True
         )
 
@@ -160,7 +160,7 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
     with open("lat_long.json", 'r') as f:
         info = convert_json_string_to_dict(f.read())
 
-    center = info["desired_map_original_center"]
+    centre = info["desired_map_original_centre"]
 
     surf = pygame.Surface((width, height), pygame.SRCALPHA, 32)
 
@@ -173,8 +173,8 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
     for point in info['drawing_points']:
         longitude = point['longitude']
         latitude = point['latitude']
-        dif_x = longitude - center['longitude']  # Find x_dif to center point
-        dif_y = latitude - center['latitude']  # Find y_dif to center point
+        dif_x = longitude - centre['longitude']  # Find x_dif to centre point
+        dif_y = latitude - centre['latitude']  # Find y_dif to centre point
 
         dif_x_m = dif_x * X_CONST * math.pi / 180 * math.cos(latitude * math.pi / 180)
         dif_y_m = dif_y * Y_CONST
@@ -192,7 +192,7 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
     for (p1, p2) in zip(points, points[1:]):
         pygame.draw.line(surf, (0, 0, 0), p1, p2, thickness)
 
-    file_name = str(abs(hash(f"{width},{height},{center},{zoom},{info['drawing_points']}")))
+    file_name = str(abs(hash(f"{width},{height},{centre},{zoom},{info['drawing_points']}")))
     pygame.image.save(surf, f"Route_GPS_Drawings\\{file_name}.png")
 
     return Path(f"Route_GPS_Drawings\\{file_name}.png")
@@ -221,8 +221,8 @@ def main():
     fine_zoom_label = TextBox(WINDOW, "Fine zoom", pos=(6, 4))
 
 
-    get_new_desired_map_center_button = Button(WINDOW, "Center map to current location", pos=(1, 5))
-    confirm_desired_map_center_button = Button(WINDOW, "Confirm map center", pos=(1, 6))
+    get_new_desired_map_centre_button = Button(WINDOW, "Centre map to current location", pos=(1, 5))
+    confirm_desired_map_centre_button = Button(WINDOW, "Confirm map centre", pos=(1, 6))
     drawing = Image(WINDOW)
     walk_to_start_title = Paragraph(WINDOW, "Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(3, 4))
     
@@ -233,19 +233,19 @@ def main():
     # Right hand walk overlay
     walking_drawing_image = Image(WINDOW, pos=(5, 3))
 
-    add_new_walking_point_button = Button(WINDOW, "Add new route drawing point", pos=(3, 5))
-    finish_walking_button = Button(WINDOW, "Finish route", pos=(3, 6))
+    add_new_walking_point_button = Button(WINDOW, "Add new route drawing point", pos=(3, 6))
+    finish_walking_button = Button(WINDOW, "Finish route", pos=(3, 7))
     comparison_percentage = TextBox(WINDOW, "", font_size=28, pos=(3, 6))
 
     state = "import_drawing"
     desired_map_zoom = 4
-    desired_map_cache_still_deciding_center = {}
+    desired_map_cache_still_deciding_centre = {}
 
     with open(Path("lat_long.json"), "r") as file:
         lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
 
     lat_longJSON["drawing_points"] = []
-    lat_longJSON["desired_map_original_center"] = {}
+    lat_longJSON["desired_map_original_centre"] = {}
 
     with open(Path("lat_long.json"), "w") as file:
         dump_to_json(lat_longJSON, file)
@@ -284,9 +284,9 @@ def main():
 
                     raw = get_raw_location_data()
                     logger.debug(raw)
-                    desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=raw)
+                    desired_map_cache_still_deciding_centre = extract_current_location(raw_gps_string=raw)
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
 
                     drawing.pos = (3, 2)
                     drawing.alpha = 0.25
@@ -304,8 +304,8 @@ def main():
             fine_zoom_out_button.draw(screen)
             fine_zoom_in_button.draw(screen)
             fine_zoom_label.draw(screen)
-            get_new_desired_map_center_button.draw(screen)
-            confirm_desired_map_center_button.draw(screen)
+            get_new_desired_map_centre_button.draw(screen)
+            confirm_desired_map_centre_button.draw(screen)
 
             if course_zoom_in_button.click(mousedown):
                 if desired_map_zoom + 1 <= 20:
@@ -314,7 +314,7 @@ def main():
 
                     drawing_width, drawing_height = drawing.img.get_size()
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
             elif course_zoom_out_button.click(mousedown):
                 if desired_map_zoom - 1 >= 1:
                     logger.debug("course zoom out")
@@ -322,7 +322,7 @@ def main():
 
                     drawing_width, drawing_height = drawing.img.get_size()
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
             elif fine_zoom_in_button.click(mousedown):
                 if desired_map_zoom + 0.1 <= 20:
                     logger.debug("fine zoom in")
@@ -330,7 +330,7 @@ def main():
 
                     drawing_width, drawing_height = drawing.img.get_size()
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
             elif fine_zoom_out_button.click(mousedown):
                 if desired_map_zoom - 0.1 >= 1:
                     logger.debug("fine zoom out")
@@ -338,21 +338,21 @@ def main():
 
                     drawing_width, drawing_height = drawing.img.get_size()
 
-                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
-            elif get_new_desired_map_center_button.click(mousedown):
-                logger.debug("update center")
+                    desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
+            elif get_new_desired_map_centre_button.click(mousedown):
+                logger.debug("Update desired map centre")
 
                 drawing_width, drawing_height = drawing.img.get_size()
 
                 raw = get_raw_location_data()
                 logger.debug(raw)
-                desired_map_cache_still_deciding_center = extract_current_location(raw_gps_string=raw)
-                desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
-            elif confirm_desired_map_center_button.click(mousedown):
+                desired_map_cache_still_deciding_centre = extract_current_location(raw_gps_string=raw)
+                desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_centre))
+            elif confirm_desired_map_centre_button.click(mousedown):
                 with open(Path("lat_long.json"), "r") as file:
                     lat_longJSON: dict[str, dict[str, float] | list[dict[str, float]]] = load_json_file(file)
 
-                lat_longJSON["desired_map_original_center"] = desired_map_cache_still_deciding_center
+                lat_longJSON["desired_map_original_centre"] = desired_map_cache_still_deciding_centre
 
                 with open(Path("lat_long.json"), "w") as file:
                     dump_to_json(lat_longJSON, file)

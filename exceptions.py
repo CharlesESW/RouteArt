@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Collection
 
 from requests import Response
 
@@ -31,3 +32,27 @@ class FailedRequestError(Exception):
 
     def __str__(self):
         return f"{self.message} (response={repr(self.response)})"
+
+class SocketDataError(IOError):
+    DEFAULT_MESSAGE = "No/invalid data was received at the socket receiver."
+
+    def __init__(self, message: str = None, socket_data: Collection[str] = None) -> None:
+        self.message: str = message or self.DEFAULT_MESSAGE
+        self.socket_data = socket_data
+
+        super().__init__(message or self.DEFAULT_MESSAGE)
+
+    def __str__(self):
+        return f"{self.message} (socket_data={repr(self.socket_data)})"
+
+class EmptyImageFilePath(ValueError):
+    DEFAULT_MESSAGE = "Image object does not have a valid file path."
+
+    def __init__(self, message: str = None, file_path: str = None) -> None:
+        self.message: str = message or self.DEFAULT_MESSAGE
+        self.socket_data = file_path
+
+        super().__init__(message or self.DEFAULT_MESSAGE)
+
+    def __str__(self):
+        return f"{self.message} (file_path={repr(self.file_path)})"
