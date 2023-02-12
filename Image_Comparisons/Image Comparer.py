@@ -6,17 +6,17 @@ import numpy as np
 
 
 # read image 1
-img1 = cv2.imread('panda.png')
+img1 = cv2.imread('User_Drawings\panda.png')
 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 
 # resize second image to match first image
 h, w = img1.shape
-image = Image.open('panda1.png')
+image = Image.open('User_Drawings\panda1.png')
 new_image = image.resize((w, h))
-new_image.save('panda1.png')
+new_image.save('User_Drawings\panda1.png')
 
 # read image 2
-img2 = cv2.imread('panda1.png')
+img2 = cv2.imread('User_Drawings\panda1.png')
 img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 #sift
@@ -29,9 +29,9 @@ keypoints_2, descriptors_2 = sift.detectAndCompute(img2,None)
 def mse(img1, img2):
    h, w = img1.shape
    diff = cv2.subtract(img1, img2)
-   err = np.sum(diff)
+   err = abs(np.sum(diff))
    mse = err/(float(h*w))
-   return mse, diff
+   return mse
 
 
 #feature matching
@@ -41,22 +41,29 @@ matches = bf.match(descriptors_1,descriptors_2)
 matches = sorted(matches, key = lambda x:x.distance)
 
 img3 = cv2.drawMatches(img1, keypoints_1, img2, keypoints_2, matches[:50], img2, flags=2)
-error, diff = mse(img1, img2)
 
-# outputting the data calculated
-print("Image matching difference between the two images:",error)
 plt.imshow(img3),plt.show()
 
 
-img = cv2.imread('Acer_Wallpaper_02_5000x2813.jpg',0)
 
-dft = cv2.dft(np.float32(img),flags = cv2.DFT_COMPLEX_OUTPUT)
-dft_shift = np.fft.fftshift(dft)
+dft1 = cv2.dft(np.float32(img1),flags = cv2.DFT_COMPLEX_OUTPUT)
+dft2 = cv2.dft(np.float32(img2),flags = cv2.DFT_COMPLEX_OUTPUT)
+dft_shift1 = np.fft.fftshift(dft1)
+dft_shift2 = np.fft.fftshift(dft2)
 
-magnitude_spectrum = 20*np.log(cv2.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
+magnitude_spectrum1 = 20*np.log(cv2.magnitude(dft_shift1[:,:,0],dft_shift1[:,:,1]))
+magnitude_spectrum2 = 20*np.log(cv2.magnitude(dft_shift2[:,:,0],dft_shift2[:,:,1]))
 
-plt.subplot(121),plt.imshow(img, cmap = 'gray')
+plt.subplot(121),plt.imshow(img1, cmap = 'gray')
 plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(magnitude_spectrum, cmap = 'gray')
+plt.subplot(122),plt.imshow(magnitude_spectrum1, cmap = 'gray')
 plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
 plt.show()
+
+plt.subplot(121),plt.imshow(img2, cmap = 'gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(magnitude_spectrum2, cmap = 'gray')
+plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+plt.show()
+
+print("The images are ", 100 - mse(magnitude_spectrum1,magnitude_spectrum2) , "% similar")
