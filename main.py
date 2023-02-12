@@ -11,7 +11,7 @@ import pygame
 import requests
 from dotenv import load_dotenv
 
-from Frontend.frontend import Button, Image, TextBox, getFile
+from Frontend.frontend import Button, Image, TextBox, Paragraph, Screen, getFile
 from exceptions import FailedRequestError
 from settings import ACCEPTABLE_LOG_LEVELS, LOG_LEVEL
 # from Image_Comparisons.Image_Comparer import image_similarity
@@ -199,29 +199,43 @@ def get_walking_drawing_image_path(width: int | float, height: int | float, zoom
 
 
 def main():
-    screen = pygame.display.set_mode((1200, 825), pygame.RESIZABLE)  # TODO: make screen size variable
+    WINDOW = Screen(1200, 800)
+    screen = pygame.display.set_mode(WINDOW.size, pygame.RESIZABLE)
 
-    big_logo = Image("Frontend\\Logo.png", pos=(600, 320), size=0.6)  # TODO: change position, width & height relative to screen size
-    title = TextBox("RouteArt", pos=(600, 665), font_size=80)
-    import_drawing_button = Button("Import drawing", pos=(600, 730))  # TODO: change position, width & height relative to screen size
-    mini_logo = Image("Frontend\\Logo.png", pos=(105, 105), size=0.18)  # TODO: change position, width & height relative to screen size
-    desired_map_image = Image(pos=(600, 330))  # TODO: change position relative to screen size
-    course_zoom_in_button = Button("+", pos=(620, 760))
-    course_zoom_out_button = Button("-", pos=(650, 760))
-    course_zoom_label = TextBox("Course zoom", pos=(640, 700))
-    fine_zoom_in_button = Button("+", pos=(780, 760))
-    fine_zoom_out_button = Button("-", pos=(810, 760))
-    fine_zoom_label = TextBox("Fine zoom", pos=(790, 700))
-    get_new_desired_map_center_button = Button("Center map to current location", pos=(400, 700))  # TODO: change position, width & height relative to screen size
-    confirm_desired_map_center_button = Button("Confirm map center", pos=(400, 760))  # TODO: change position, width & height relative to screen size
-    drawing = Image()
-    walk_to_start_title = TextBox("Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(600, 700))  # TODO: change position, width & height relative to screen size
-    location_marker_map_image = Image(pos=(900, 460))  # TODO: change position, width & height relative to screen size
-    start_walking_button = Button("I am ready to start my route", pos=(600, 780))  # TODO: change position, width & height relative to screen size
-    walking_drawing_image = Image(pos=(900, 460))  # TODO: change position, width & height relative to screen size
-    add_new_walking_point_button = Button("Add new route drawing point", pos=(600, 755))  # TODO: change position, width & height relative to screen size
-    finish_walking_button = Button("Finish route", pos=(600, 790))
-    comparison_percentage = TextBox("", font_size=28, pos=(600, 720))
+    big_logo = Image(WINDOW, "Frontend\\Logo.png", pos=(3, 2), size=0.6)
+    title = TextBox(WINDOW, "RouteArt", pos=(3, 5), font_size=80)
+
+    # Import photo to trace
+    import_drawing_button = Button(WINDOW, "Import drawing", pos=(3, 6))
+    mini_logo = Image(WINDOW, "Frontend\\Logo.png", pos=(0, 0), size=0.18)
+
+    # Desired map (on left)
+    desired_map_image = Image(WINDOW, pos=(3, 2))
+
+    # Zoom in and out w/ Labels
+    course_zoom_in_button = Button(WINDOW, "+", pos=(5, 5))
+    course_zoom_out_button = Button(WINDOW, "-", pos=(5, 6))
+    course_zoom_label = TextBox(WINDOW, "Course zoom", pos=(5, 4))
+    fine_zoom_in_button = Button(WINDOW, "+", pos=(6, 5))
+    fine_zoom_out_button = Button(WINDOW, "-", pos=(6, 6))
+    fine_zoom_label = TextBox(WINDOW, "Fine zoom", pos=(6, 4))
+
+
+    get_new_desired_map_center_button = Button(WINDOW, "Center map to current location", pos=(1, 5))
+    confirm_desired_map_center_button = Button(WINDOW, "Confirm map center", pos=(1, 6))
+    drawing = Image(WINDOW)
+    walk_to_start_title = Paragraph(WINDOW, "Walk to any point on your drawing to start your journey\nOnly press the button below when you are on your drawing!", font_size=28, pos=(3, 5))
+    
+    # Right hand map with pointers
+    location_marker_map_image = Image(WINDOW, pos=(5, 3))
+    start_walking_button = Button(WINDOW, "I am ready to start my route", pos=(3, 4))
+    
+    # Right hand walk overlay
+    walking_drawing_image = Image(WINDOW, pos=(5, 3))
+
+    add_new_walking_point_button = Button(WINDOW, "Add new route drawing point", pos=(3, 6))
+    finish_walking_button = Button(WINDOW, "Finish route", pos=(3, 5))
+    comparison_percentage = TextBox(WINDOW, "", font_size=28, pos=(3, 6))
 
     state = "import_drawing"
     desired_map_zoom = 4
@@ -245,6 +259,9 @@ def main():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mousedown = True
+            
+            if event.type == pygame.VIDEORESIZE:
+                WINDOW.size = (event.w, event.h)
 
         screen.fill((255, 255, 255))
 
@@ -271,7 +288,7 @@ def main():
 
                     desired_map_image.reloadImage(get_desired_background_map_image(drawing_width, drawing_height, desired_map_zoom, desired_map_cache_still_deciding_center))  # TODO: change width & height relative to screen size
 
-                    drawing.pos = (600, 330)  # TODO: change position relative to screen size
+                    drawing.pos = (3, 2)
                     drawing.alpha = 0.25
 
                     logger.debug("changing state to get_desired_map")
@@ -351,8 +368,8 @@ def main():
             walk_to_start_title.draw(screen)
 
             if start_walking_button.click(mousedown):
-                desired_map_image.pos = (290, 460)  # TODO: change position relative to screen size
-                drawing.pos = (290, 460)  # TODO: change position relative to screen size
+                desired_map_image.pos = (1, 3)
+                drawing.pos = (1, 3)
                 drawing.alpha = 0.25
 
                 raw = get_raw_location_data()
@@ -403,9 +420,9 @@ def main():
                 walking_drawing_image.reloadImage(get_walking_drawing_image_path(drawing_width, drawing_height, desired_map_zoom))
 
             elif finish_walking_button.click(mousedown):
-                drawing.pos = (600, 330)  # TODO: change position relative to screen size
+                drawing.pos = (3, 3)
                 drawing.alpha = 1
-                walking_drawing_image.pos = (600, 330)  # TODO: change position relative to screen size
+                walking_drawing_image.pos = (3, 3)
                 # comparison_percentage.text = f"Your route was {image_similarity(walking_drawing_image.path, drawing.path)} similar to the uploaded drawing!"
                 comparison_percentage.text = f"Your route was ****% similar to the uploaded drawing!"
 

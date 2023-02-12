@@ -10,12 +10,82 @@ pygame.font.init()
 root = tk.Tk()
 root.withdraw()
 
+class Screen:
+    def __init__(self, width: int, height: int) -> None:
+        self._width = width
+        self._height = height
+
+        self.x = [
+            self._width / 6,        # Left Left of centre
+            self._width / 4,        # Left of centre
+            self._width / 3,        # Left-ish of centre
+            self._width / 2,        # Middle of screen
+            2 * self._width / 3,    # Right-ish of centre
+            3 * self._width / 4,    # Right of centre
+            5 * self._width / 6,    # Right Right of centre
+        ]
+
+        self.y = [
+            self._height / 6,        # Left Left of centre
+            self._height / 4,        # Left of centre
+            self._height / 3,        # Left-ish of centre
+            self._height / 2,        # Middle of screen
+            2 * self._height / 3,    # Right of centre
+            3 * self._height / 4,    # Right of centre
+            5 * self._height / 6,    # Right Right of centre
+        ]
+
+        self.x = [int(pos) for pos in self.x]
+        self.y = [int(pos) for pos in self.y]
+
+    @property
+    def width(self) -> int:
+        return self._width
+
+    @width.setter
+    def width(self, val: int) -> None:
+        old_width = self._width
+        self._width = val
+
+        scale_factor = self._width / old_width
+
+        self.x = [int(x*scale_factor) for x in self.x]
+
+    @property
+    def height(self) -> int:
+        return self._height
+
+    @height.setter
+    def height(self, val: int) -> None:
+        old_height = self._height
+        self._height = val
+
+        scale_factor = self._height / old_height
+        self.y = [int(y*scale_factor) for y in self.y]
+
+    @property
+    def size(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
+    @size.setter
+    def size(self, val: tuple[int, int]) -> None:
+        old_width = self._width
+        old_height = self._height
+
+        self._width, self._height = val
+
+        x_scale_factor = self._width / old_width
+        y_scale_factor = self._height / old_height
+
+        self.x = [int(x*x_scale_factor) for x in self.x]
+        self.y = [int(y*y_scale_factor) for y in self.y]
+
 
 # Image class
 class Image:
     # Load image
     def __init__(
-            self, path: str | Path | None = None, pos: tuple[int, int] = (0, 0), size: tuple[int, int] | float | None = None,
+            self, window: Screen, path: str | Path | None = None, pos: tuple[int, int] = (0, 0), size: tuple[int, int] | float | None = None,
             center_flag: bool = True, alpha: float = 1
     ) -> None:
 
@@ -30,6 +100,8 @@ class Image:
         self._alpha = alpha
         self._pos = pos
 
+        self.WINDOW = window
+
         if size is not None:
             if isinstance(size, tuple):
                 self.img = pygame.transform.scale(self.img, size)
@@ -40,11 +112,11 @@ class Image:
     def draw(self, display: pygame.surface.Surface) -> None:
         if self.path is not None:
             if self.c_flag:
-                x, y = self.pos
+                x, y = self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]
                 wid, height = self.img.get_rect().size
                 display.blit(self.img, (x - wid / 2, y - height / 2))
             else:
-                display.blit(self.img, self.pos)
+                display.blit(self.img, (self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]))
         else:
             raise BaseException("You did a little fucky wucky silly billy boo bah")
 
@@ -100,9 +172,6 @@ class Image:
                 ratio = height/rect[1]
                 new_wid = int(wid/ratio)
                 self.resizeImage((new_wid, rect[1]))
-
-
-        print(self.img.get_size())
         
 
     @property
@@ -127,7 +196,7 @@ class Image:
 # Button Class
 class Button:
     def __init__(
-            self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
+            self, window: Screen, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
             border: int = 2, border_curve: bool = True, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20
     ) -> None:
         self._text = text
@@ -139,6 +208,8 @@ class Button:
         self.border_curve = border_curve
         self.auto_size = auto_size
         self.bg_colour = (255, 255, 255)
+
+        self.WINDOW = window
 
         self.font = pygame.font.SysFont(font_family, font_size)
 
@@ -153,13 +224,13 @@ class Button:
 
     def draw(self, display: pygame.surface.Surface):
         if self.c_flag:
-            x, y = self._pos
+            x, y = self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]
             width, height = self.dims
             x -= width / 2
             y -= height / 2
 
         else:
-            x, y = self._pos
+            x, y = self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]
 
         pygame.draw.rect(display, (0, 0, 0), (x, y, *self.dims), border_radius=2 * self.border_curve)
         pygame.draw.rect(display, self.bg_colour, (*map(lambda x: x + self.border, (x, y)), *map(lambda x: x - 2 * self.border, self.dims)), border_radius=2 * self.border_curve)
@@ -169,16 +240,15 @@ class Button:
         display.blit(self.rendText, (x, y))
 
     def hover(self, mouse_pos: tuple[int, int]) -> bool:
-        # TODO add hover highlighting?
         if self.c_flag:
             highlight = (
-                    (self.pos[0] - self.dims[0] / 2 <= mouse_pos[0] <= self.pos[0] + self.dims[0] / 2) and
-                    (self.pos[1] - self.dims[1] / 2 <= mouse_pos[1] <= self.pos[1] + self.dims[1] / 2)
+                    (self.WINDOW.x[self.pos[0]] - self.dims[0] / 2 <= mouse_pos[0] <= self.WINDOW.x[self.pos[0]] + self.dims[0] / 2) and
+                    (self.WINDOW.y[self.pos[1]]- self.dims[1] / 2 <= mouse_pos[1] <= self.WINDOW.y[self.pos[1]] + self.dims[1] / 2)
             )
         else:
             highlight = (
-                    (self.pos[0] <= mouse_pos[0] <= self.pos[0] + self.dims[0]) and
-                    (self.pos[1] <= mouse_pos[1] <= self.pos[1] + self.dims[1])
+                    (self.WINDOW.x[self.pos[0]] <= mouse_pos[0] <= self.WINDOW.x[self.pos[0]] + self.dims[0]) and
+                    (self.WINDOW.y[self.pos[1]] <= mouse_pos[1] <= self.WINDOW.y[self.pos[1]] + self.dims[1])
             )
 
         if highlight:
@@ -231,23 +301,25 @@ class Button:
 
 
 class TextBox:
-    def __init__(self, text: str, pos: tuple[int, int], centre_flag: bool = True, font_family: str = "Helvetica", font_size: int = 20) -> None:
+    def __init__(self, window: Screen, text: str, pos: tuple[int, int], centre_flag: bool = True, font_family: str = "Helvetica", font_size: int = 20) -> None:
         self._text = text
         self._pos = pos
 
         self.c_flag = centre_flag
 
+        self.WINDOW = window
+
         self.font = pygame.font.SysFont(font_family, font_size)
 
         self.rendText = self.font.render(text, True, (0, 0, 0))
 
-    def draw(self, screen) -> None:
+    def draw(self, screen: pygame.surface.Surface) -> None:
         if self.c_flag:
-            x, y = self._pos
+            x, y = self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]
             width, height = self.rendText.get_rect().size
             screen.blit(self.rendText, (x - width / 2, y - height / 2))
         else:
-            screen.blit(self.rendText, self._pos)
+            screen.blit(self.rendText, (self.WINDOW.x[self.pos[0]], self.WINDOW.y[self.pos[1]]))
 
     @property
     def text(self) -> str:
@@ -266,6 +338,41 @@ class TextBox:
     def pos(self, val: tuple[int, int]) -> None:
         self._pos = val
 
+
+class Paragraph:
+    def __init__(
+        self, window: Screen, text: str, pos: tuple[int, int],
+        centre_flag: bool = True, font_family: str = "Helvetica", font_size: int = 20
+    ) -> None:
+        self.texts = [TextBox(window, line, (pos[0], pos[1]+i), centre_flag, font_family, font_size) for (i, line) in enumerate(text.split("\n"))]
+        self.c_flag = centre_flag
+        self.font_family = font_family
+        self.font_size = font_size
+        self.pos = pos
+
+        self.WINDOW = window
+
+    def draw(self, screen: pygame.surface.Surface) -> None:
+        for text in self.texts:
+            text.draw(screen)
+
+    @property
+    def text(self) -> str:
+        total = ""
+        for text in self.texts:
+            total += text.text+'\n'
+
+        total = total[:-1]
+
+        return total
+
+    @text.setter
+    def text(self, val: str) -> None:
+        self.texts = []
+        for (i, line) in enumerate(val.split("\n")):
+            self.texts.append(TextBox(self.WINDOW, line, (self.pos[0], self.pos[1]+i), self.c_flag, self.font_family, self.font_size))
+
+# TODO Could add pos var to this to make paragraphs easier to move
 
 # Function to get image file
 def getFile() -> str:
