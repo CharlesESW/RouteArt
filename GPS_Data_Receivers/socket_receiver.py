@@ -23,7 +23,7 @@ connection, client_address = socket.accept()
 def get_raw_location_data() -> str:
     contents = connection.recv(2048).decode("ascii").split("%")
     for content in contents:
-        if content != "{}":
+        if content != "{}" and content[0] == "{":
             return content
 
     raise SocketDataError(socket_data=contents)

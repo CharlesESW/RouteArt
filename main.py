@@ -207,6 +207,8 @@ def main():
     WINDOW = Screen(1200, 800)
     screen = pygame.display.set_mode(WINDOW.size, pygame.RESIZABLE)
 
+    clock = pygame.time.Clock()
+
     big_logo = Image(WINDOW, "Frontend\\Logo.png", pos=(3, 2), size=0.6)
     title = TextBox(WINDOW, "RouteArt", pos=(3, 5), font_size=80)
 
@@ -255,6 +257,7 @@ def main():
         dump_to_json(lat_longJSON, file)
 
     while True:
+        clock.tick(60)
         mousedown = False
 
         for event in pygame.event.get():
@@ -395,6 +398,7 @@ def main():
 
                 logger.debug("changing state to walking")
                 state = "walking"
+                counter = 180
 
         elif state == "walking":
             mini_logo.draw(screen)
@@ -405,7 +409,11 @@ def main():
             add_new_walking_point_button.draw(screen)
             finish_walking_button.draw(screen)
 
-            if add_new_walking_point_button.click(mousedown) or finish_walking_button.click(mousedown):
+            if counter != 0:
+                counter -= 1
+
+            if finish_walking_button.click(mousedown) or counter == 0:
+                counter = 180
                 raw = get_raw_location_data()
                 logger.debug(raw)
                 current_location = extract_current_location(raw)
