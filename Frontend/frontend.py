@@ -118,9 +118,6 @@ class Button:
             self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
             border: int = 2, border_curve: bool = True, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20
     ) -> None:
-            self, text: str, pos: tuple[int, int], size: tuple[int, int] | None = None, center_flag: bool = True,
-            border: int = 2, border_curve: bool = True, auto_size: bool = True, font_family: str = "Helvetica", font_size: int = 20
-    ) -> None:
         self._text = text
         self._pos = pos
         self.dims = size
